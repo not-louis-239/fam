@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+# ignore dev workflow junk and personal design notes
+workflow/
+scripts/
+
+.venv
+*.env
+
+.vscode
+*.vsix

@@ -1,0 +1,24 @@
+{
+    "name": "fam",
+    "displayName": "Fam",
+    "author": { "name": "Louis Masarei-Boulton"},
+    "publisher": "louis-boulton",
+    "description": "syntax highlighting and conveniences for Fam - family tree modeling language",
+    "version": "0.1.0",
+    "license": "GPL-3.0-only",
+    "engines": { "vscode": "^1.60.0" },
+    "categories": [ "Programming Languages" ],
+    "contributes": {
+        "languages": [{
+            "id": "fam",
+            "aliases": ["Fam", "fam"],
+            "extensions": [".fam"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "fam",
+            "scopeName": "source.fam",
+            "path": "./syntaxes/fam.tmLanguage.json"
+        }]
+    }
+}
