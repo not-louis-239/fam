@@ -21,7 +21,11 @@ class FamException(Exception):
 
 
 class FamParseError(FamException):
-    pass
+    def __init__(self, msg: str, pos: int, src_code: str):
+        super().__init__(msg)
+        self.msg = msg
+        self.pos = pos
+        self.src_code = src_code
 
 
 class FamIndentationError(FamParseError):

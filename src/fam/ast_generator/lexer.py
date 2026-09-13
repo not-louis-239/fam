@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Callable
 
-from fam.errors import FamTabError
+from fam.errors import FamParseError
 
 
 class TokenType(StrEnum):
@@ -208,12 +208,36 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
 ]
 
 
-class Lexer:
-    def lex(self, src_code: str) -> None:
-        if "\t" in src_code:
-            raise FamTabError("Tabs are not allowed in .fam scripts. Use spaces for indentation instead.")
+# Note:
+# Source code and positions are stored here as full strings and integers respectively, internally.
 
-        # TODO: rest of implementation
+
+class Lexer:
+    def lex(self, src_code: str) -> list[Token]:
+        tokens: list[Token] = []
+
+        code_len = len(src_code)
+        pos = 0
+
+        while pos < code_len:
+            for pat, tok_factory in PATTERNS:
+                match = pat.match(src_code, pos)
+
+                if not match:
+                    continue
+
+                if tok_factory is not None:
+                    tok = tok_factory(match)
+                    tok.start_pos = pos
+                    tok.end_pos = match.end()
+                    tokens.append(tok)
+
+                pos = match.end()
+                break
+            else:
+                raise FamParseError(f"Unexpected token near position {pos}", pos=pos, src_code=src_code)
+
+        return tokens
 
 
 class FamCompiler:
