@@ -7,9 +7,10 @@
         { "include": "#comments" },
         { "include": "#literals" },
         { "include": "#keywords" },
+        { "include": "#builtins" },
         { "include": "#constants" },
-        { "include": "#names" },
         { "include": "#operators" },
+        { "include": "#names" },
         { "include": "#punctuation" }
     ],
     "repository": {
@@ -22,7 +23,16 @@
                     "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.fam" } },
                     "endCaptures": { "0": { "name": "punctuation.definition.string.end.fam" } },
                     "patterns": [
-                        { "name": "constant.character.escape.fam", "match": "\\\\([\\\\'\"abfnrtv]|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|N\\{[^}]+\\}|[0-7]{1,3})" }
+                        {
+                            "comment": "escape characters",
+                            "name": "constant.character.escape.fam",
+                            "match": "\\\\([\\\\'\"abfnrtv]|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|N\\{[^}]+\\}|[0-7]{1,3})"
+                        },
+                        {
+                            "comment": "format specifier",
+                            "name": "constant.character.format.placeholder.fam",
+                            "match": "%(s|[0-9]*?d|\\+?(\\.[0-9]+?)?f|\\+?[0-9]+?(\\.[0-9]+?)?f)"
+                        }
                     ]
                 }
             ]
@@ -40,38 +50,58 @@
             "patterns": [
                 {
                     "comment": "hh:mm DD/MM/YYYY dates",
-                    "name": "constant.date.fam",
+                    "name": "constant.numeric.date.fam",
                     "match": "[0-2][0-9]:[0-5][0-9]\\s+[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]"
                 },
                 {
                     "comment": "DD/MM/YYYY dates",
-                    "name": "constant.date.fam",
+                    "name": "constant.numeric.date.fam",
                     "match": "[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]"
                 },
                 {
                     "comment": "Xd hh:mm durations",
-                    "name": "constant.duration.fam",
+                    "name": "constant.numeric.duration.fam",
                     "match": "[0-9]+d [0-2][0-9]:[0-5][0-9]"
                 },
                 {
                     "comment": "hh:mm",
-                    "name": "constant.duration.fam",
+                    "name": "constant.numeric.duration.fam",
                     "match": "[0-2][0-9]:[0-5][0-9]"
                 },
                 {
                     "comment": "real numbers",
-                    "name": "constant.real.fam",
+                    "name": "constant.numeric.real.fam",
                     "match": "\\d+\\.?\\d*"
                 },
                 {
                     "comment": "integers",
-                    "name": "constant.integer.fam",
+                    "name": "constant.numeric.integer.fam",
                     "match": "\\d+"
                 }
             ]
         },
         "keywords": {
             "patterns": [
+                {
+                    "comment": "variable",
+                    "match": "\\b(Define)\\s+(.*?)\\s+(Variable)\\b",
+                    "captures": {
+                        "1": { "name": "keyword.control.flow.fam" },
+                        "2": { "name": "support.type.fam" },
+                        "3": { "name": "storage.type.variable.fam" }
+                    }
+                },
+                {
+                    "comment": "link declaration",
+                    "match": "\\b(Link) ([A-Z][a-z]+) ([A-Z][a-z]+( [a-zA-Z]+)*) (->) ([A-Z][a-z]+( [a-zA-Z]+)*)\\b",
+                    "captures": {
+                        "1": { "name": "storage.type.link.fam" },
+                        "2": { "name": "entity.name.function.link.fam" },
+                        "3": { "name": "entity.name.type.class.title-case.fam" },
+                        "5": { "name": "keyword.operator.arrow-right.fam" },
+                        "6": { "name": "entity.name.type.class.title-case.fam" }
+                    }
+                },
                 {
                     "comment": "define",
                     "name": "keyword.control.flow.fam",
@@ -110,17 +140,12 @@
                 {
                     "comment": "link",
                     "name": "storage.type.link.fam",
-                    "match": "Linm"
-                },
-                {
-                    "comment": "variable",
-                    "name": "storage.type.variable.fam",
-                    "match": "Variable"
+                    "match": "Link"
                 },
                 {
                     "comment": "attribute",
                     "name": "storage.type.attribute.fam",
-                    "match": "Attribute"
+                    "match": "\\bAttribute\\b"
                 },
                 {
                     "comment": "constraints",
@@ -139,21 +164,40 @@
                 }
             ]
         },
+        "builtins": {
+            "patterns": [
+                {
+                    "comment": "built-in types",
+                    "name": "support.type.builtin.fam",
+                    "match": "\\b(Integer|Int|Sequence|Seq|Real|Node|Link|Datetime|Duration|Boolean)\\b"
+                },
+                {
+                    "comment": "built-in functions",
+                    "name": "support.function.builtin.fam",
+                    "match": "\\b(abs|floor|ceil|round|today|now)\\b"
+                },
+                {
+                    "comment": "special variables",
+                    "name": "variable.language.special.fam",
+                    "match": "\\b(Me|This)\\b"
+                }
+            ]
+        },
         "constants": {
             "patterns": [
                 {
                     "comment": "none",
-                    "name": "constant.null.fam",
+                    "name": "constant.language.null.fam",
                     "match": "None"
                 },
                 {
                     "comment": "true",
-                    "name": "constant.boolean.fam",
+                    "name": "constant.language.true.fam",
                     "match": "True"
                 },
                 {
                     "comment": "false",
-                    "name": "constant.boolean.fam",
+                    "name": "constant.language.false.fam",
                     "match": "False"
                 }
             ]
@@ -163,17 +207,32 @@
                 {
                     "comment": "title case identifiers",
                     "name": "entity.name.type.class.title-case.fam",
-                    "match": "[a-zA-Z]+( [a-zA-Z]+)*"
+                    "match": "\\b[A-Z][a-z]+( [a-zA-Z]+)*\\b"
                 },
                 {
                     "comment": "lower_snake_case identifiers",
-                    "name": "entity.name.lower-snake-case.fam",
+                    "name": "entity.name.function.lower-snake-case.fam",
                     "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b"
                 }
             ]
         },
         "operators": {
             "patterns": [
+                {
+                    "comment": "right single-ended arrow",
+                    "name": "keyword.operator.arrow-right.fam",
+                    "match": "->"
+                },
+                {
+                    "comment": "double-ended arrow",
+                    "name": "keyword.operator.arrow-double.fam",
+                    "match": "<->"
+                },
+                {
+                    "comment": "implication arrow",
+                    "name": "keyword.operator.implication.fam",
+                    "match": "=>"
+                },
                 {
                     "comment": "binary add",
                     "name": "keyword.operator.arithmetic.fam",
@@ -227,22 +286,7 @@
                 {
                     "comment": "identity operator",
                     "name": "keyword.operator.logical.fam",
-                    "match": "Is"
-                },
-                {
-                    "comment": "right single-ended arrow",
-                    "name": "keyword.operator.arrow-right.fam",
-                    "match": "->"
-                },
-                {
-                    "comment": "double-ended arrow",
-                    "name": "keyword.operator.arrow-double.fam",
-                    "match": "<->"
-                },
-                {
-                    "comment": "implication arrow",
-                    "name": "keyword.operator.implication.fam",
-                    "match": "=>"
+                    "match": "\\bIs\\b"
                 },
                 {
                     "comment": "assignment",
@@ -255,8 +299,13 @@
             "patterns": [
                 {
                     "comment": "dot",
-                    "name": "member.attribute-access.fam",
+                    "name": "punctuation.attribute-access.fam",
                     "match": "\\."
+                },
+                {
+                    "comment": "comma",
+                    "name": "punctuation.separator.comma.fam",
+                    "match": ","
                 },
                 {
                     "comment": "colon",
