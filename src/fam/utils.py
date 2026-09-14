@@ -17,9 +17,8 @@ def pos_to_line_col(src_code: str, pos: int) -> tuple[int, int]:
 
         if current_pos <= pos < current_pos + total_len:
             col = pos - current_pos
-            return line_num + 1, col + 1
+            return line_num, col
 
         current_pos += total_len
 
-    return len(src_code), 1
-
+    return len(src_lines), 0

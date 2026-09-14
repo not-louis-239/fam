@@ -244,7 +244,7 @@ class Lexer:
                 pos = match.end()
                 break
             else:
-                raise FamParseError(f"Unexpected token near position {pos}", pos=pos, src_code=src_code)
+                raise FamParseError(f"invalid token '{src_code[pos]}'", pos=pos, src_code=src_code)
 
         # Remove consecutive newline tokens because they aren't important - only the last newline in
         # a series of newlines matters for indentation
