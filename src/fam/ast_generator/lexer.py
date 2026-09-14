@@ -81,6 +81,7 @@ class TokenType(StrEnum):
     BIN_IS = "BinIs"
 
     # Whitespace
+    WHITESPACE = "Whitespace"
     NEWLINE = "Newline"
     INDENT = "Indent"
     DEDENT = "Dedent"
@@ -200,11 +201,14 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\('), lambda m: Token(TokenType.L_PAREN, m.group(0))),
     (re.compile(r'\)'), lambda m: Token(TokenType.R_PAREN, m.group(0))),
 
-    # Whitespace
-    # TODO: How do indentation-based languages like Python pick up on these, and error out if whitespace is incorrect?
+    # Newlines
+    (re.compile(r'\n'), lambda m: Token(TokenType.NEWLINE, m.group(0))),
 
-    # Skip whitespace
-    (re.compile(r'\s+'), None)
+    # Skip trailing whitespace
+    (re.compile(r'\s+$'), None),
+
+    # Catch whitespace for now - these will be converted to indentation later
+    (re.compile(r'\s+'), lambda m: Token(TokenType.WHITESPACE, m.group(0)))
 ]
 
 
@@ -214,8 +218,10 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
 
 class Lexer:
     def lex(self, src_code: str) -> list[Token]:
+        # Initialise token list
         tokens: list[Token] = []
 
+        # Run through the source code and extract the tokens
         code_len = len(src_code)
         pos = 0
 
@@ -236,6 +242,14 @@ class Lexer:
                 break
             else:
                 raise FamParseError(f"Unexpected token near position {pos}", pos=pos, src_code=src_code)
+
+        # Remove consecutive newline tokens because they aren't important
+        last_token = None
+
+        for tok in tokens[:]:
+            if tok.typ == TokenType.NEWLINE and last_token and last_token.typ == TokenType.NEWLINE:
+                tokens.remove(tok)
+            last_token = tok
 
         return tokens
 
