@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 
 # ignore dev workflow junk and personal design notes
+tempCodeRunnerFile.*
 workflow/
 scripts/
 

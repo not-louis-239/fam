@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Callable
 
-from fam.errors import FamParseError
+from fam.errors import FamParseError, FamTabError, FamIndentationError
 
 
 class TokenType(StrEnum):
@@ -38,6 +38,7 @@ class TokenType(StrEnum):
     # Core type keywords
     NODE = "Node"
     LINK = "Link"
+    FROM = "From"
     VARIABLE = "Variable"
     ATTRIBUTE = "Attribute"
     CONSTRAINTS = "Constraints"
@@ -50,6 +51,10 @@ class TokenType(StrEnum):
     # Modifier keywords
     INFERRED = "Inferred"
     IMPLICIT = "Implicit"
+
+    # Logical operators
+    BIN_IS = "BinIs"
+    BIN_NOT = "BinNot"
 
     # Names
     NAME = "Name"
@@ -78,10 +83,8 @@ class TokenType(StrEnum):
     BIN_LESS_THAN = "BinLessThan"
     BIN_GREATER_EQ = "BinGreaterEq"
     BIN_LESS_EQ = "BinLessEq"
-    BIN_IS = "BinIs"
 
     # Whitespace
-    WHITESPACE = "Whitespace"
     NEWLINE = "Newline"
     INDENT = "Indent"
     DEDENT = "Dedent"
@@ -158,6 +161,7 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
 
     (re.compile(r'\bNode\b'), lambda m: Token(TokenType.NODE, m.group(0))),
     (re.compile(r'\bLink\b'), lambda m: Token(TokenType.LINK, m.group(0))),
+    (re.compile(r'\bFrom\b'), lambda m: Token(TokenType.FROM, m.group(0))),
     (re.compile(r'\bVariable\b'), lambda m: Token(TokenType.VARIABLE, m.group(0))),
     (re.compile(r'\bAttribute\b'), lambda m: Token(TokenType.ATTRIBUTE, m.group(0))),
     (re.compile(r'\bConstraints\b'), lambda m: Token(TokenType.CONSTRAINTS, m.group(0))),
@@ -165,8 +169,11 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bInferred\b'), lambda m: Token(TokenType.INFERRED, m.group(0))),
     (re.compile(r'\bImplicit\b'), lambda m: Token(TokenType.IMPLICIT, m.group(0))),
 
+    (re.compile(r'\bIs\b'), lambda m: Token(TokenType.BIN_IS, m.group(0))),
+    (re.compile(r'\bNot\b'), lambda m: Token(TokenType.BIN_NOT, m.group(0))),
+
     # Language constants
-    (re.compile(r'\bNone\b'), lambda m: Token(TokenType.DEFINE, m.group(0))),
+    (re.compile(r'\bNone\b'), lambda m: Token(TokenType.NONE, m.group(0))),
     (re.compile(r'\bTrue\b'), lambda m: Token(TokenType.TRUE, m.group(0))),
     (re.compile(r'\bFalse\b'), lambda m: Token(TokenType.FALSE, m.group(0))),
 
@@ -176,24 +183,23 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     # Lowercase (lower_snake_case) identifiers
     (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
-    # Binary operators
-    (re.compile(r'\+'), lambda m: Token(TokenType.BIN_ADD, m.group(0))),
-    (re.compile(r'-'), lambda m: Token(TokenType.BIN_SUB, m.group(0))),
-    (re.compile(r'\*'), lambda m: Token(TokenType.BIN_MUL, m.group(0))),
-    (re.compile(r'\/'), lambda m: Token(TokenType.BIN_DIV, m.group(0))),
-    (re.compile(r'\|'), lambda m: Token(TokenType.BIN_OR, m.group(0))),
-    (re.compile(r'=='), lambda m: Token(TokenType.BIN_EQ, m.group(0))),
-    (re.compile(r'>='), lambda m: Token(TokenType.BIN_GREATER_EQ, m.group(0))),
-    (re.compile(r'<='), lambda m: Token(TokenType.BIN_LESS_EQ, m.group(0))),
-    (re.compile(r'>'), lambda m: Token(TokenType.BIN_GREATER_THAN, m.group(0))),
-    (re.compile(r'<'), lambda m: Token(TokenType.BIN_LESS_THAN, m.group(0))),
-    (re.compile(r'Is'), lambda m: Token(TokenType.BIN_IS, m.group(0))),
-
     # Other operators
     (re.compile(r'->'), lambda m: Token(TokenType.ARROW_RIGHT, m.group(0))),
     (re.compile(r'<->'), lambda m: Token(TokenType.ARROW_DOUBLE, m.group(0))),
     (re.compile(r'=>'), lambda m: Token(TokenType.ARROW_IMPLICATION, m.group(0))),
     (re.compile(r'='), lambda m: Token(TokenType.EQUALS, m.group(0))),
+
+    # Binary operators
+    (re.compile(r'=='), lambda m: Token(TokenType.BIN_EQ, m.group(0))),
+    (re.compile(r'>='), lambda m: Token(TokenType.BIN_GREATER_EQ, m.group(0))),
+    (re.compile(r'<='), lambda m: Token(TokenType.BIN_LESS_EQ, m.group(0))),
+    (re.compile(r'\+'), lambda m: Token(TokenType.BIN_ADD, m.group(0))),
+    (re.compile(r'-'), lambda m: Token(TokenType.BIN_SUB, m.group(0))),
+    (re.compile(r'\*'), lambda m: Token(TokenType.BIN_MUL, m.group(0))),
+    (re.compile(r'\/'), lambda m: Token(TokenType.BIN_DIV, m.group(0))),
+    (re.compile(r'\|'), lambda m: Token(TokenType.BIN_OR, m.group(0))),
+    (re.compile(r'>'), lambda m: Token(TokenType.BIN_GREATER_THAN, m.group(0))),
+    (re.compile(r'<'), lambda m: Token(TokenType.BIN_LESS_THAN, m.group(0))),
 
     # Punctuation
     (re.compile(r'\.'), lambda m: Token(TokenType.DOT, m.group(0))),
@@ -201,14 +207,11 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\('), lambda m: Token(TokenType.L_PAREN, m.group(0))),
     (re.compile(r'\)'), lambda m: Token(TokenType.R_PAREN, m.group(0))),
 
-    # Newlines
-    (re.compile(r'\n'), lambda m: Token(TokenType.NEWLINE, m.group(0))),
+    # Newlines and indentation - newline + any amount of whitespace except newlines
+    (re.compile(r'\n[^\S\n]*'), lambda m: Token(TokenType.NEWLINE, m.group(0))),
 
-    # Skip trailing whitespace
-    (re.compile(r'\s+$'), None),
-
-    # Catch whitespace for now - these will be converted to indentation later
-    (re.compile(r'\s+'), lambda m: Token(TokenType.WHITESPACE, m.group(0)))
+    # Skip whitespace
+    (re.compile(r'\s+'), None),
 ]
 
 
@@ -243,15 +246,69 @@ class Lexer:
             else:
                 raise FamParseError(f"Unexpected token near position {pos}", pos=pos, src_code=src_code)
 
-        # Remove consecutive newline tokens because they aren't important
+        # Remove consecutive newline tokens because they aren't important - only the last newline in
+        # a series of newlines matters for indentation
         last_token = None
 
-        for tok in tokens[:]:
+        # Iteration is reversed because we only want to keep the last token in each chain of
+        # NEWLINE tokens. This algorithm by default removes all NEWLINEs after the first,
+        # so reversing iteration preserves the last token only out of each chain.
+        for tok in tokens[::-1]:
             if tok.typ == TokenType.NEWLINE and last_token and last_token.typ == TokenType.NEWLINE:
                 tokens.remove(tok)
             last_token = tok
 
-        return tokens
+        # Convert newline tokens to indentation
+        indent_stack: list[str] = [""]
+        processed_tokens: list[Token] = []
+
+        for tok in tokens:
+            # If we're not at a newline, skip past tokens until we get to one.
+            if tok.typ != TokenType.NEWLINE:
+                processed_tokens.append(tok)
+                continue
+
+            # If we see a newline, we split the token into the newline itself
+            # and indentation, which we then process.
+
+            # Add a synthetic newline token
+            processed_tokens.append(Token(
+                typ=TokenType.NEWLINE, string='\n',
+                start_pos=tok.start_pos, end_pos=tok.start_pos + 1
+            ))
+
+            # Process the indentation
+            indent_prefix = tok.string[1:]  # strip away the newline
+            last_indent = indent_stack[-1]
+
+            indent_start_pos = tok.start_pos + 1
+
+            # Constant indentation
+            if indent_prefix == last_indent:
+                pass
+
+            # TabError - Inconsistent prefix
+            elif not (last_indent.startswith(indent_prefix) or indent_prefix.startswith(last_indent)):
+                raise FamTabError(msg="inconsistent use of tabs and spaces in indentation", pos=indent_start_pos, src_code=src_code)
+
+            # Indent - consistent prefix
+            elif indent_prefix.startswith(last_indent):
+                indent_stack.append(indent_prefix)
+                processed_tokens.append(Token(typ=TokenType.INDENT, string=indent_prefix, start_pos=indent_start_pos, end_pos=indent_start_pos + len(indent_prefix)))
+
+            # Dedent - try to find the outer indentation level
+            else:
+                while indent_stack:
+                    if indent_stack[-1] == indent_prefix:
+                        break
+                    indent_stack.pop()
+                    processed_tokens.append(Token(typ=TokenType.DEDENT, string='', start_pos=indent_start_pos, end_pos=indent_start_pos))
+                else:
+                    raise FamIndentationError("unindent does not match any outer indentation level", pos=indent_start_pos, src_code=src_code)
+
+        assert not any(tok.start_pos == -1 or tok.end_pos == -1 for tok in processed_tokens), "Missing token metadata!!"
+
+        return processed_tokens
 
 
 class FamCompiler:

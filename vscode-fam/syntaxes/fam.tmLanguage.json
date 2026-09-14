@@ -162,6 +162,16 @@
                     "comment": "implicit link",
                     "name": "storage.type.link.implicit.fam",
                     "match": "Implicit"
+                },
+                {
+                    "comment": "identity operator",
+                    "name": "keyword.operator.logical.fam",
+                    "match": "\\bIs\\b"
+                },
+                {
+                    "comment": "negation operator",
+                    "name": "keyword.operator.logical.fam",
+                    "match": "\\bNot\\b"
                 }
             ]
         },
@@ -283,11 +293,6 @@
                     "comment": "less than",
                     "name": "keyword.operator.comparison.fam",
                     "match": "<"
-                },
-                {
-                    "comment": "identity operator",
-                    "name": "keyword.operator.logical.fam",
-                    "match": "\\bIs\\b"
                 },
                 {
                     "comment": "assignment",

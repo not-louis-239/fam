@@ -6,9 +6,9 @@ def pos_to_line_col(src_code: str, pos: int) -> tuple[int, int]:
 
     current_pos = 0
 
-    # TODO: rest of implementation
+    src_lines = src_code.splitlines()
 
-    for line_num, line_content in enumerate(src_code):
+    for line_num, line_content in enumerate(src_lines):
         line_len = len(line_content)
 
         # include newline that was removed by splitlines()
