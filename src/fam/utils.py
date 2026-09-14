@@ -1,5 +1,3 @@
-import re
-
 def pos_to_line_col(src_code: str, pos: int) -> tuple[int, int]:
     """Accepts source code and a character position, and returns
     a line and column (x, y), where x and y are line and column (0-based)."""

@@ -309,7 +309,3 @@ class Lexer:
         assert not any(tok.start_pos == -1 or tok.end_pos == -1 for tok in processed_tokens), "Missing token metadata!!"
 
         return processed_tokens
-
-
-class FamCompiler:
-    pass
