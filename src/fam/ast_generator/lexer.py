@@ -170,7 +170,7 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bFalse\b'), lambda m: Token(TokenType.FALSE, m.group(0))),
 
     # Title case identifiers - for nodes and links
-    (re.compile(r'[a-zA-Z]+( [a-zA-Z]+)*'), lambda m: Token(TokenType.NAME, m.group(0))),
+    (re.compile(r'\b[a-zA-Z]+\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Lowercase (lower_snake_case) identifiers
     (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
@@ -201,7 +201,7 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\)'), lambda m: Token(TokenType.R_PAREN, m.group(0))),
 
     # Whitespace
-    # TODO: How does Python pick up on these, and error out if whitespace is incorrect?
+    # TODO: How do indentation-based languages like Python pick up on these, and error out if whitespace is incorrect?
 
     # Skip whitespace
     (re.compile(r'\s+'), None)
