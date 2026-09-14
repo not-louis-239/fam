@@ -217,12 +217,41 @@
             "patterns": [
                 {
                     "comment": "title case identifiers",
-                    "name": "entity.name.type.class.title-case.fam",
+                    "name": "entity.name.title-case.fam",
                     "match": "\\b[A-Z][a-z]+\\b"
                 },
                 {
+                    "comment": "attribute access",
+                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+                    "captures": {
+                        "1": { "name": "punctuation.attribute-access.fam" },
+                        "2": { "name": "meta.attribute.fam" }
+                    }
+                },
+                {
+                    "comment": "attribute value pair in node declaration",
+                    "match": "\\b([_a-zA-Z][_a-zA-Z0-9]*)\\b(:) (.*)$",
+                    "captures": {
+                        "1": { "name": "meta.attribute.fam" },
+                        "2": { "name": "punctuation.section.fam" },
+                        "3": {
+                            "patterns": [
+                                { "include": "#strings" },
+                                { "include": "#comments" },
+                                { "include": "#literals" },
+                                { "include": "#keywords" },
+                                { "include": "#builtins" },
+                                { "include": "#constants" },
+                                { "include": "#operators" },
+                                { "include": "#names" },
+                                { "include": "#punctuation" }
+                            ]
+                        }
+                    }
+                },
+                {
                     "comment": "lower_snake_case identifiers",
-                    "name": "entity.name.function.lower-snake-case.fam",
+                    "name": "entity.name.function.lowercase.fam",
                     "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b"
                 }
             ]

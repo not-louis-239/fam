@@ -17,121 +17,16 @@
 
 
 import re
-from dataclasses import dataclass
-from enum import StrEnum
 from typing import Callable
 
+from fam.compiler.utils.tokens import Token
+from fam.compiler.utils.tokens import TokenType
 from fam.errors import FamParseError, FamTabError, FamIndentationError
-
-
-class TokenType(StrEnum):
-    # In order of priority...
-
-    # Keywords
-    DEFINE = "Define"
-    METHOD = "Method"
-    RETURN = "Return"
-    DISPLAY = "Display"
-    IF = "If"
-    ELSE = "Else"
-
-    # Core type keywords
-    NODE = "Node"
-    LINK = "Link"
-    FROM = "From"
-    VARIABLE = "Variable"
-    ATTRIBUTE = "Attribute"
-    CONSTRAINTS = "Constraints"
-
-    # Language constants
-    NONE = "None"
-    TRUE = "True"
-    FALSE = "False"
-
-    # Modifier keywords
-    INFERRED = "Inferred"
-    IMPLICIT = "Implicit"
-
-    # Logical operators
-    BIN_IS = "BinIs"
-    BIN_NOT = "BinNot"
-
-    # Names
-    NAME = "Name"
-
-    # Literals
-    STRING = "String"
-    DATE = "Date"
-    DURATION = "Duration"
-    INTEGER = "Integer"
-    REAL = "Real"
-
-    # Operations
-    ARROW_RIGHT = "ArrowRight"
-    ARROW_DOUBLE = "ArrowDouble"
-    ARROW_IMPLICATION = "ArrowImplication"
-    EQUALS = "Equals"
-
-    # Binary operations
-    BIN_ADD = "BinAdd"
-    BIN_SUB = "BinSub"
-    BIN_MUL = "BinMul"
-    BIN_DIV = "BinDiv"
-    BIN_OR = "BinOr"
-    BIN_EQ = "BinEq"
-    BIN_GREATER_THAN = "BinGreaterThan"
-    BIN_LESS_THAN = "BinLessThan"
-    BIN_GREATER_EQ = "BinGreaterEq"
-    BIN_LESS_EQ = "BinLessEq"
-
-    # Whitespace
-    NEWLINE = "Newline"
-    INDENT = "Indent"
-    DEDENT = "Dedent"
-
-    # Punctuation
-    DOT = "Dot"
-    COLON = "Colon"
-    L_PAREN = "LParen"
-    R_PAREN = "RParen"
-
-
-@dataclass
-class Token:
-    typ: TokenType
-    string: str
-
-    # Metadata is attached by the lexer, not the compiler itself
-    start_pos: int = -1
-    end_pos: int = -1
+from fam.utils import unescape_string
 
 
 # TokenFactory - a function to convert a re.Match into TokenData
 type TokenFactory = Callable[[re.Match], Token]
-
-
-def unescape_string(s: str) -> str:
-    """Unescape escape sequences in a string literal and remove the string's surrounding quotes."""
-
-    # Remove surrounding quotes
-    content = s[1:-1]
-
-    # Handle common escape sequences
-    SEQUENCES = [
-        ('\\n', '\n'),
-        ('\\t', '\t'),
-        ('\\r', '\r'),
-        ('\\"', '"'),
-        ('\\\\', '\\'),
-    ]
-
-    for seq in SEQUENCES:
-        content = content.replace(seq[0], seq[1])
-
-    # Handle escapes like "\xHH" for hex values
-    def replace_hex(match: re.Match) -> str:
-        return chr(int(match.group(1), 16))
-    return re.sub(r'\\x([0-9a-fA-F]{2})', replace_hex, content)
 
 
 # Patterns - a list of regex patterns, and the token factory to use when it finds that pattern, or None if it is to be skipped
