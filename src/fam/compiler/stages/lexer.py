@@ -23,6 +23,7 @@ from fam.compiler.utils.tokens import Token
 from fam.compiler.utils.tokens import TokenType
 from fam.errors import FamParseError, FamTabError, FamIndentationError
 from fam.utils import unescape_string
+from fam.compiler.utils.nesting import NESTING_INC_TOKENS, NESTING_DEC_TOKENS, NESTING_PAIRS, BRACKET_CHARS
 
 
 # TokenFactory - a function to convert a re.Match into TokenData
@@ -31,6 +32,9 @@ type TokenFactory = Callable[[re.Match], Token]
 
 # Patterns - a list of regex patterns, and the token factory to use when it finds that pattern, or None if it is to be skipped
 PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
+    # Parenthesised identifiers with whitespace like '(foo bar)'
+    (re.compile(r'\([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*(\s+[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*)*\)'), lambda m: Token(TokenType.NAME, m.group(0))),
+
     # Strings
     # TODO: this should have support for single-quoted strings as well...
     (re.compile(r'"(?:[^"\\]|\\.)*"'), lambda m: Token(TokenType.STRING, unescape_string(m.group(0)))),
@@ -43,16 +47,18 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]'), lambda m: Token(TokenType.DATE, m.group(0))),  # DD/MM/YYYY Dates
     (re.compile(r'[0-9]+d [0-2][0-9]:[0-5][0-9]'), lambda m: Token(TokenType.DURATION, m.group(0))),  # Xd hh:mm durations
     (re.compile(r'[0-2][0-9]:[0-5][0-9]'), lambda m: Token(TokenType.DURATION, m.group(0))),  # hh:mm durations
-    (re.compile(r'\d+\.?\d*'), lambda m: Token(TokenType.REAL, m.group(0))),  # Real numbers
+    (re.compile(r'\d+\.\d*'), lambda m: Token(TokenType.REAL, m.group(0))),  # Real numbers
     (re.compile(r'\d+'), lambda m: Token(TokenType.INTEGER, m.group(0))),  # Integers
 
     # Keywords
     (re.compile(r'\bDefine\b'), lambda m: Token(TokenType.DEFINE, m.group(0))),
+    (re.compile(r'\bDefault\b'), lambda m: Token(TokenType.DEFAULT, m.group(0))),
     (re.compile(r'\bMethod\b'), lambda m: Token(TokenType.METHOD, m.group(0))),
     (re.compile(r'\bReturn\b'), lambda m: Token(TokenType.RETURN, m.group(0))),
     (re.compile(r'\bDisplay\b'), lambda m: Token(TokenType.DISPLAY, m.group(0))),
     (re.compile(r'\bIf\b'), lambda m: Token(TokenType.IF, m.group(0))),
     (re.compile(r'\bElse\b'), lambda m: Token(TokenType.ELSE, m.group(0))),
+    (re.compile(r'\bPass\b'), lambda m: Token(TokenType.ELSE, m.group(0))),
 
     (re.compile(r'\bNode\b'), lambda m: Token(TokenType.NODE, m.group(0))),
     (re.compile(r'\bLink\b'), lambda m: Token(TokenType.LINK, m.group(0))),
@@ -72,11 +78,8 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bTrue\b'), lambda m: Token(TokenType.TRUE, m.group(0))),
     (re.compile(r'\bFalse\b'), lambda m: Token(TokenType.FALSE, m.group(0))),
 
-    # Title case identifiers - for nodes and links
-    (re.compile(r'\b[a-zA-Z]+\b'), lambda m: Token(TokenType.NAME, m.group(0))),
-
-    # Lowercase (lower_snake_case) identifiers
-    (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
+    # Names - snake case with hyphens allowed, but no consecutive hyphens, no leading or trailing hyphens, no leading digits
+    (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Other operators
     (re.compile(r'->'), lambda m: Token(TokenType.ARROW_RIGHT, m.group(0))),
@@ -92,15 +95,22 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'-'), lambda m: Token(TokenType.BIN_SUB, m.group(0))),
     (re.compile(r'\*'), lambda m: Token(TokenType.BIN_MUL, m.group(0))),
     (re.compile(r'\/'), lambda m: Token(TokenType.BIN_DIV, m.group(0))),
-    (re.compile(r'\|'), lambda m: Token(TokenType.BIN_OR, m.group(0))),
+    (re.compile(r'%'), lambda m: Token(TokenType.BIN_MODULO, m.group(0))),
+    (re.compile(r'\|'), lambda m: Token(TokenType.BIN_BIT_OR, m.group(0))),
     (re.compile(r'>'), lambda m: Token(TokenType.BIN_GREATER_THAN, m.group(0))),
     (re.compile(r'<'), lambda m: Token(TokenType.BIN_LESS_THAN, m.group(0))),
 
     # Punctuation
     (re.compile(r'\.'), lambda m: Token(TokenType.DOT, m.group(0))),
     (re.compile(r':'), lambda m: Token(TokenType.COLON, m.group(0))),
+    (re.compile(r','), lambda m: Token(TokenType.COMMA, m.group(0))),
     (re.compile(r'\('), lambda m: Token(TokenType.L_PAREN, m.group(0))),
     (re.compile(r'\)'), lambda m: Token(TokenType.R_PAREN, m.group(0))),
+    (re.compile(r'\{'), lambda m: Token(TokenType.L_BRACE, m.group(0))),
+    (re.compile(r'\}'), lambda m: Token(TokenType.R_BRACE, m.group(0))),
+    (re.compile(r'\['), lambda m: Token(TokenType.L_SQ_BRAC, m.group(0))),
+    (re.compile(r'\]'), lambda m: Token(TokenType.R_SQ_BRAC, m.group(0))),
+
 
     # Newlines and indentation - newline + any amount of whitespace except newlines
     (re.compile(r'\n[^\S\n]*'), lambda m: Token(TokenType.NEWLINE, m.group(0))),
@@ -139,7 +149,7 @@ class Lexer:
                 pos = match.end()
                 break
             else:
-                raise FamParseError(f"invalid token '{src_code[pos]}'", pos=pos, src_code=src_code)
+                raise FamParseError(f"invalid token {src_code[pos]!r}", start_pos=pos, end_pos=pos)
 
         # Remove consecutive newline tokens because they aren't important - only the last newline in
         # a series of newlines matters for indentation
@@ -152,6 +162,34 @@ class Lexer:
             if tok.typ == TokenType.NEWLINE and last_token and last_token.typ == TokenType.NEWLINE:
                 tokens.remove(tok)
             last_token = tok
+
+        # Remove newline tokens inside parentheses, brackets or braces.
+        # This process should also help to catch some mismatched brackets early
+        nesting_stack: list[Token] = []
+
+        for tok in tokens[:]:
+            if tok.typ in NESTING_INC_TOKENS:
+                nesting_stack.append(tok)
+            elif tok.typ in NESTING_DEC_TOKENS:
+                try:
+                    opening_token = nesting_stack.pop()
+                except IndexError:
+                    raise FamParseError(f"unmatched {tok.string!r}", tok.start_pos, tok.end_pos)
+
+                if NESTING_PAIRS[opening_token.typ] != tok.typ:
+                    raise FamParseError(
+                        f"expected {BRACKET_CHARS[NESTING_PAIRS[opening_token.typ]]!r} to match previous {opening_token.string!r}",
+                        tok.start_pos, tok.end_pos
+                    )
+            elif nesting_stack and tok.typ == TokenType.NEWLINE:
+                tokens.remove(tok)  # remove insignificant newlines
+
+        if nesting_stack:
+            bad_tok = nesting_stack[-1]
+            raise FamParseError(
+                f"{bad_tok.string!r} was never closed",
+                bad_tok.start_pos, bad_tok.end_pos
+            )
 
         # Convert newline tokens to indentation
         indent_stack: list[str] = [""]
@@ -184,7 +222,7 @@ class Lexer:
 
             # TabError - Inconsistent prefix
             elif not (last_indent.startswith(indent_prefix) or indent_prefix.startswith(last_indent)):
-                raise FamTabError(msg="inconsistent use of tabs and spaces in indentation", pos=indent_start_pos, src_code=src_code)
+                raise FamTabError(msg="inconsistent use of tabs and spaces in indentation", start_pos=indent_start_pos, end_pos=indent_start_pos + len(indent_prefix))
 
             # Indent - consistent prefix
             elif indent_prefix.startswith(last_indent):
@@ -199,7 +237,7 @@ class Lexer:
                     indent_stack.pop()
                     processed_tokens.append(Token(typ=TokenType.DEDENT, string='', start_pos=indent_start_pos, end_pos=indent_start_pos))
                 else:
-                    raise FamIndentationError("unindent does not match any outer indentation level", pos=indent_start_pos, src_code=src_code)
+                    raise FamIndentationError("unindent does not match any outer indentation level", start_pos=indent_start_pos, end_pos=indent_start_pos + len(indent_prefix))
 
         assert not any(tok.start_pos == -1 or tok.end_pos == -1 for tok in processed_tokens), "Missing token metadata!!"
 
