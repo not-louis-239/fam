@@ -16,6 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from stages.lexer import Lexer
+from stages.parser import Parser
+
+
 class FamCompiler:
-    # TODO: implement the compiler once all stages are implemented
-    pass
+    def __init__(self) -> None:
+        self.lexer = Lexer()
+        self.parser = Parser()
+
+    def compile_fam_code(self, src_code: str):  # no type hint for now
+        tokens = self.lexer.lex(src_code)
+        ast = self.parser.parse(tokens)

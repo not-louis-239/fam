@@ -61,7 +61,7 @@
                 {
                     "comment": "Xd hh:mm durations",
                     "name": "constant.numeric.duration.fam",
-                    "match": "[0-9]+d [0-2][0-9]:[0-5][0-9]"
+                    "match": "[0-9]+d\\s+[0-2][0-9]:[0-5][0-9]"
                 },
                 {
                     "comment": "hh:mm",
@@ -84,29 +84,46 @@
             "patterns": [
                 {
                     "comment": "variable",
-                    "match": "\\b(Define)\\s+(.*?)\\s+(Variable)\\b",
+                    "match": "\\b(Define)\\s+(.*)\\s+(Variable)\\b",
                     "captures": {
                         "1": { "name": "keyword.control.flow.fam" },
-                        "2": { "name": "support.type.fam" },
+                        "2": {
+                            "patterns": [
+                                { "include": "#strings" },
+                                { "include": "#comments" },
+                                { "include": "#literals" },
+                                { "include": "#keywords" },
+                                { "include": "#builtins" },
+                                { "include": "#constants" },
+                                { "include": "#operators" },
+                                { "include": "#names" },
+                                { "include": "#punctuation" }
+                            ]
+                        },
                         "3": { "name": "storage.type.variable.fam" }
                     }
                 },
                 {
                     "comment": "link declaration",
-                    "match": "\\b(Link)\\s+([A-Z][a-z]+(\\s+[a-zA-Z]+)*)\\s+(From)\\s+([A-Z][a-z]+(\\s+[a-zA-Z]+)*)\\s+(->)\\s+([A-Z][a-z]+(\\s+[a-zA-Z]+)*)\\b",
+                    "match": "\\b(Link)\\s+(.*)\\s+(From)\\s+(.*)\\s+(->)\\s+(.*)\\b",
                     "captures": {
                         "1": { "name": "storage.type.link.fam" },
-                        "2": { "name": "entity.name.type.class.title-case.fam" },
-                        "4": { "name": "storage.type.link.from.fam" },
-                        "5": { "name": "entity.name.type.class.title-case.fam" },
-                        "7": { "name": "keyword.operator.arrow-right.fam" },
-                        "8": { "name": "entity.name.type.class.title-case.fam" }
+                        "2": { "name": "entity.name.type.title-case.fam" },
+                        "3": { "name": "storage.type.link.from.fam" },
+                        "4": { "name": "entity.name.type.title-case.fam" },
+                        "5": { "name": "keyword.operator.arrow-right.fam" },
+                        "6": { "name": "entity.name.type.title-case.fam" }
                     }
                 },
                 {
                     "comment": "define",
                     "name": "keyword.control.flow.fam",
                     "match": "Define"
+                },
+                {
+                    "comment": "default",
+                    "name": "keyword.control.flow.fam",
+                    "match": "Default"
                 },
                 {
                     "comment": "method",
@@ -172,6 +189,11 @@
                     "comment": "negation operator",
                     "name": "keyword.operator.logical.fam",
                     "match": "\\bNot\\b"
+                },
+                {
+                    "comment": "no-op syntax filler",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bPass\\b"
                 }
             ]
         },
@@ -216,13 +238,17 @@
         "names": {
             "patterns": [
                 {
-                    "comment": "title case identifiers",
-                    "name": "entity.name.title-case.fam",
-                    "match": "\\b[A-Z][a-z]+\\b"
+                    "comment": "method",
+                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*|\\([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*(\\s+[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*)*\\))(\\()",
+                    "captures": {
+                        "1": { "name": "punctuation.attribute-access.fam" },
+                        "2": { "name": "entity.name.function.fam" },
+                        "3": { "name": "punctuation.fam" }
+                    }
                 },
                 {
                     "comment": "attribute access",
-                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*)\\b",
+                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*|\\([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*(\\s+[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*)*\\))",
                     "captures": {
                         "1": { "name": "punctuation.attribute-access.fam" },
                         "2": { "name": "meta.attribute.fam" }
@@ -230,7 +256,7 @@
                 },
                 {
                     "comment": "attribute value pair in node declaration",
-                    "match": "\\b([_a-zA-Z][_a-zA-Z0-9]*)\\b(:) (.*)$",
+                    "match": "^\\s*(.+)\\s*(:)\\s*(.+)$",
                     "captures": {
                         "1": { "name": "meta.attribute.fam" },
                         "2": { "name": "punctuation.section.fam" },
@@ -250,9 +276,14 @@
                     }
                 },
                 {
-                    "comment": "lower_snake_case identifiers",
+                    "comment": "title case identifiers",
+                    "name": "entity.name.type.title-case.fam",
+                    "match": "\\b[_A-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\\b"
+                },
+                {
+                    "comment": "snake_case identifiers with hyphens",
                     "name": "entity.name.function.lowercase.fam",
-                    "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b"
+                    "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\\b"
                 }
             ]
         },
@@ -348,9 +379,9 @@
                     "match": ":"
                 },
                 {
-                    "comment": "parentheses",
-                    "name": "punctuation.parens.fam",
-                    "match": "[\\(\\)]"
+                    "comment": "parentheses, brackets, braces",
+                    "name": "punctuation.fam",
+                    "match": "[\\(\\)\\[\\]\\{\\}]"
                 }
             ]
         }

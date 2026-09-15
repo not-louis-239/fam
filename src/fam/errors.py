@@ -16,16 +16,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from fam.compiler.utils.tokens import Token
+
+
 class FamException(Exception):
-    pass
+    def __init__(self, msg: str, start_pos: int, end_pos: int):
+        super().__init__(msg)
+        self.msg = msg
+        self.start_pos = start_pos
+        self.end_pos = end_pos
 
 
 class FamParseError(FamException):
-    def __init__(self, msg: str, pos: int, src_code: str):
-        super().__init__(msg)
-        self.msg = msg
-        self.pos = pos
-        self.src_code = src_code
+    pass
 
 
 class FamIndentationError(FamParseError):
