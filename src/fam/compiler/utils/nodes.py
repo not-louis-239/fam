@@ -140,7 +140,7 @@ class ImplicitLinkDef(LinkDef):
 # Link declarations
 
 @dataclass
-class LinkDecl:
+class LinkDecl(ASTNode):
     name: Name
     src: Name
     dest: Name
@@ -149,7 +149,7 @@ class LinkDecl:
 # Node declarations
 
 @dataclass
-class NodeDecl:
+class NodeDecl(ASTNode):
     name: Name
     attributes: list[Attribute]
 
@@ -162,7 +162,7 @@ class MethodParam(ASTNode):
     default: Expr | None
 
 @dataclass
-class MethodDecl:
+class MethodDecl(ASTNode):
     name: Name
     caller: Name | None  # The class, instances on which the method can be called. None = it's a function.
     params: list[MethodParam]
@@ -171,7 +171,7 @@ class MethodDecl:
 # Method calls
 
 @dataclass
-class MethodCall:
+class MethodCall(ASTNode):
     name: Name
     args: Expr
     kwargs: dict[Name, Expr]

@@ -16,8 +16,93 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from fam.ast_generator.
+from typing import Callable
+
+from fam.compiler.utils.tokens import Token, TokenType
+from fam.compiler.utils.nodes import AST, ASTNode, Name, Expr, NodeDecl, Attribute
+from fam.compiler.utils.nesting import NESTING_INC_TOKENS, NESTING_DEC_TOKENS, NESTING_PAIRS, BRACKET_CHARS
+from fam.compiler.debug.debug import visualise_tokens
+from fam.errors import FamParseError
+
+
+type _ParseCallable = Callable[["Parser"], ASTNode]
 
 
 class Parser:
-    def parse(self, tokens: list[Token])
+    PARSE_REGISTRY: dict[TokenType, _ParseCallable] = {}
+
+    @classmethod
+    def register(cls, *types: TokenType):
+        def wrapper(fn: Callable[[Parser], ASTNode]) -> _ParseCallable:
+            for typ in types:
+                cls.PARSE_REGISTRY[typ] = fn
+            return fn
+        return wrapper
+
+    def eof(self) -> bool:
+        """Return True if there are no more tokens to be consumed."""
+        return self.pos >= self.num_tokens
+
+    def peek(self) -> Token:
+        """Return the current token without eating it."""
+        return self.tokens[self.pos]
+
+    def advance(self) -> Token:
+        """Eats and returns the current token."""
+        token = self.peek()
+        self.pos += 1
+        return token
+
+    def expect(self, *acceptable_types: TokenType) -> Token:
+        """Consume and return the current token and raise an error if it
+        is not one of a set of accepted types."""
+        tok = self.advance()
+        if tok.typ not in acceptable_types:
+            raise FamParseError(f"expected one of {acceptable_types}, got token {tok.string!r} of type {tok.typ!r}", start_pos=tok.start_pos, end_pos=tok.end_pos)
+        return tok
+
+    def parse_stmt(self) -> ASTNode:
+        """Parse an individual statement."""
+        token = self.peek()
+        try:
+            return self.PARSE_REGISTRY[token.typ](self)
+        except KeyError:
+            raise FamParseError(f"unexpected token {token.string!r}", start_pos=token.start_pos, end_pos=token.end_pos)
+        except RecursionError:
+            raise FamParseError("control structure is too deeply nested", start_pos=token.start_pos, end_pos=token.end_pos)
+
+    def parse(self, tokens: list[Token]) -> AST:
+        """Parse a list of tokens and generate an AST (Abstract Syntax Tree)
+        consisting of nodes."""
+
+        self.tokens: list[Token] = tokens
+        self.num_tokens = len(self.tokens)
+        self.pos = 0
+        ast: AST = []
+
+        while not self.eof():
+            if self.peek().typ == TokenType.NEWLINE:
+                self.advance()
+                continue
+
+            ast.append(self.parse_stmt())
+            while not self.eof() and self.peek().typ == TokenType.NEWLINE:
+                self.advance()
+
+        return ast
+
+
+def parse_method_args(self: Parser) -> tuple[list[Expr], dict[Name, Expr]]:
+    ...
+
+def parse_attributes(self: Parser) -> list[Attribute]:
+    ...
+
+def parse_code_block(self: Parser) -> AST:
+    ...
+
+# Main parse functions
+
+@Parser.register(TokenType.NODE)
+def parse_node_decl(self: Parser) -> NodeDecl:
+    ...
