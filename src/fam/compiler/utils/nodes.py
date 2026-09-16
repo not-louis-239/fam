@@ -54,6 +54,7 @@ class Date(Literal):
     hour: int
     minute: int
     second: int
+    frac_seconds: float
 
 @dataclass
 class Duration(Literal):
@@ -61,6 +62,7 @@ class Duration(Literal):
     hour: int
     minute: int
     second: int
+    frac_seconds: float
 
 @dataclass
 class Integer(Literal):
@@ -81,6 +83,31 @@ class Boolean(Literal):
 @dataclass
 class NoneItem(Literal): pass
 
+# Sequences
+
+class Sequence(Expr):
+    elems: list[Expr]
+
+# Indexing
+
+@dataclass
+class IndexOp(Expr):
+    container: Expr
+    index: Expr
+
+# Unary operators
+
+@dataclass
+class UnaryOp(Expr):
+    operand: Expr
+
+@dataclass
+class PosOp(UnaryOp): pass
+@dataclass
+class NegOp(UnaryOp): pass
+@dataclass
+class NotOp(UnaryOp): pass
+
 # Binary operators
 
 @dataclass
@@ -99,6 +126,8 @@ class MultOp(BinOp): pass
 class DivOp(BinOp): pass
 @dataclass
 class ModuloOp(BinOp): pass
+@dataclass
+class PowOp(BinOp): pass
 
 # Comparative binary operators
 @dataclass
@@ -114,22 +143,21 @@ class LtEqOp(BinOp): pass
 
 # Logical operators
 @dataclass
-class BitOrOp(BinOp): pass
-@dataclass
 class AndOp(BinOp): pass
+@dataclass
+class OrOp(BinOp): pass
 @dataclass
 class IdentityOp(BinOp): pass
 
-# Unary operators
-
+# Bitwise operators
 @dataclass
-class UnaryOp(Expr):
-    operand: Expr
-
+class BitAndOp(BinOp): pass
 @dataclass
-class NotOp(UnaryOp): pass
+class BitOrOp(BinOp): pass
 @dataclass
-class NegOp(UnaryOp): pass
+class BitXorOp(BinOp): pass
+@dataclass
+class BitNotOp(UnaryOp): pass
 
 # Attribute clauses
 

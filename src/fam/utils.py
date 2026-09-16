@@ -10,6 +10,20 @@ COL_MAGENTA = "\033[95m"
 COL_CYAN = "\033[96m"
 
 
+_DAYS_IN_MONTHS: tuple[int, ...] = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+
+
+def get_days_in_month(month: int, year: int):
+    """Get the number of days in the given 1-based month,
+    in the given year, accounting for leap years."""
+
+    # leap year every 4 years, skip centuries except every 400 years
+    leap_year = year % 4 == 0 and year % 100 != 0 or year % 400 == 0
+
+    if month == 2 and leap_year:
+        return 29
+    return _DAYS_IN_MONTHS[month - 1]
+
 def pos_to_line_col(src_code: str, pos: int) -> tuple[int, int]:
     """Accepts source code and a character position, and returns
     a line and column (x, y), where x and y are line and column (0-based)."""
