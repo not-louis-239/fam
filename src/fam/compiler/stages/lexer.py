@@ -32,15 +32,15 @@ type TokenFactory = Callable[[re.Match], Token]
 
 # Patterns - a list of regex patterns, and the token factory to use when it finds that pattern, or None if it is to be skipped
 PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
-    # Parenthesised identifiers with whitespace like '(foo bar)'
-    (re.compile(r'\([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*(\s+[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*)*\)'), lambda m: Token(TokenType.NAME, m.group(0))),
-
     # Strings
     # TODO: this should have support for single-quoted strings as well...
     (re.compile(r'"(?:[^"\\]|\\.)*"'), lambda m: Token(TokenType.STRING, unescape_string(m.group(0)))),
 
     # Comments
     (re.compile(r'#.*'), None),
+
+    # Parenthesised identifiers with whitespace like '(foo bar)'
+    (re.compile(r'\([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*\)'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Literals
     (re.compile(r'[0-2][0-9]:[0-5][0-9]\s+[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]'), lambda m: Token(TokenType.DATE, m.group(0))),  # hh:mm DD/MM/YYYY Dates
@@ -78,8 +78,8 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bTrue\b'), lambda m: Token(TokenType.TRUE, m.group(0))),
     (re.compile(r'\bFalse\b'), lambda m: Token(TokenType.FALSE, m.group(0))),
 
-    # Names - snake case with hyphens allowed, but no consecutive hyphens, no leading or trailing hyphens, no leading digits
-    (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
+    # Single-word identifiers - hyphens allowed, but no consecutive hyphens, no leading or trailing hyphens, no leading digits
+    (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Other operators
     (re.compile(r'->'), lambda m: Token(TokenType.ARROW_RIGHT, m.group(0))),
