@@ -338,6 +338,11 @@
                     "match": "-"
                 },
                 {
+                    "comment": "indices / exponentiation",
+                    "name": "keyword.operator.arithmetic.fam",
+                    "match": "\\*\\*"
+                },
+                {
                     "comment": "binary multiply",
                     "name": "keyword.operator.arithmetic.fam",
                     "match": "\\*"

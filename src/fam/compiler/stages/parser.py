@@ -44,7 +44,10 @@ class Parser:
 
     def peek(self) -> Token:
         """Return the current token without eating it."""
-        return self.tokens[self.pos]
+        try:
+            return self.tokens[self.pos]
+        except IndexError:
+            raise FamParseError("unexpected end of input", self.tokens[-1].start_pos, self.tokens[-1].end_pos)
 
     def advance(self) -> Token:
         """Eats and returns the current token."""
@@ -80,22 +83,29 @@ class Parser:
         ast: AST = []
 
         while not self.eof():
+            # Ignore empty newlines
             if self.peek().typ == TokenType.NEWLINE:
                 self.advance()
                 continue
 
             ast.append(self.parse_stmt())
+
+            # Skip newlines before the next statement
             while not self.eof() and self.peek().typ == TokenType.NEWLINE:
                 self.advance()
 
         return ast
 
 
-def parse_method_args(self: Parser) -> tuple[list[Expr], dict[Name, Expr]]:
-    ...
+# Expression parsing
+
+def parse_expr(self: Parser) ->
+
+# Helper parser functions
 
 def parse_attributes(self: Parser) -> list[Attribute]:
-    ...
+    self.expect(TokenType.NAME)
+    self.expect(TokenType.COLON)
 
 def parse_code_block(self: Parser) -> AST:
     ...
@@ -104,4 +114,27 @@ def parse_code_block(self: Parser) -> AST:
 
 @Parser.register(TokenType.NODE)
 def parse_node_decl(self: Parser) -> NodeDecl:
-    ...
+
+    # Consume the 'Node' token
+    node_token = self.expect(TokenType.NODE)
+
+    if self.peek().typ == TokenType.METHOD:
+        # Consume the 'Method' token
+        ...
+
+        # Consume and record the method name
+
+
+    else:
+        # Consume the name token and save it
+        name_token = self.expect(TokenType.NAME)
+        self.expect(TokenType.COLON)
+
+        self.expect(TokenType.NEWLINE)
+        self.expect(TokenType.INDENT)
+
+        # Parse attributes
+
+
+        # Dedent
+        self.expect(TokenType.DEDENT)

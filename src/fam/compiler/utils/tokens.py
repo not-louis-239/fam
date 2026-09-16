@@ -76,6 +76,7 @@ class TokenType(StrEnum):
     BIN_MUL = "BinMul"
     BIN_DIV = "BinDiv"
     BIN_MODULO = "BinModulo"
+    BIN_POW = "BinPow"
     BIN_BIT_OR = "BinOr"
     BIN_EQ = "BinEq"
     BIN_GREATER_THAN = "BinGreaterThan"

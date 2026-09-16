@@ -93,6 +93,7 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'<='), lambda m: Token(TokenType.BIN_LESS_EQ, m.group(0))),
     (re.compile(r'\+'), lambda m: Token(TokenType.BIN_ADD, m.group(0))),
     (re.compile(r'-'), lambda m: Token(TokenType.BIN_SUB, m.group(0))),
+    (re.compile(r'\*\*'), lambda m: Token(TokenType.BIN_POW, m.group(0))),
     (re.compile(r'\*'), lambda m: Token(TokenType.BIN_MUL, m.group(0))),
     (re.compile(r'\/'), lambda m: Token(TokenType.BIN_DIV, m.group(0))),
     (re.compile(r'%'), lambda m: Token(TokenType.BIN_MODULO, m.group(0))),

@@ -26,9 +26,9 @@ def visualise_tokens(tokens: list[Token], src_code: str | None = None) -> None:
         if src_code is not None:
             # Make a representation of the token that is easier to understand:
             line, col = pos_to_line_col(src_code, tok.start_pos)
-            print(f"    {COL_BLUE}{i: 3d}.{COL_END} {COL_YELLOW}{tok.typ}{COL_END} {COL_GREEN}{f"'{tok.string.replace('\n', '\\n')}'"}{COL_END} at line {COL_MAGENTA}{line + 1}{COL_END}, position {COL_MAGENTA}{col + 1}{COL_END}")
+            print(f"{COL_BLUE}{i: 6d}.{COL_END} {COL_YELLOW}{tok.typ}{COL_END} {COL_GREEN}{f"'{tok.string.replace('\n', '\\n')}'"}{COL_END} at line {COL_MAGENTA}{line + 1}{COL_END}, position {COL_MAGENTA}{col + 1}{COL_END}")
         else:
-            print(f"    {COL_BLUE}{i: 3d}.{COL_END} {COL_YELLOW}{tok.typ}{COL_END} {COL_GREEN}{f"'{tok.string.replace('\n', '\\n')}'"}{COL_END} at chars {COL_MAGENTA}{tok.start_pos + 1} - {tok.end_pos + 1}{COL_END}")
+            print(f"{COL_BLUE}{i: 6d}.{COL_END} {COL_YELLOW}{tok.typ}{COL_END} {COL_GREEN}{f"'{tok.string.replace('\n', '\\n')}'"}{COL_END} at chars {COL_MAGENTA}{tok.start_pos + 1} - {tok.end_pos + 1}{COL_END}")
 
 
 def _dump_node(node: ASTNode, padding: int = 0, indent: int = 4):
