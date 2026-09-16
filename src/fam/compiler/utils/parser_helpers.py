@@ -27,8 +27,24 @@ if TYPE_CHECKING:
 from fam.utils import get_days_in_month
 from fam.errors import FamParseError
 from fam.compiler.utils.tokens import TokenType, Token
-from fam.compiler.utils.nodes import AndOp, IndexOp, Literal, LtEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, KeyValuePair, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
+from fam.compiler.utils.nodes import AndOp, IndexOp, Sequence, LtEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, KeyValuePair, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
 from fam.compiler.utils.regex import DateKeys, DATE_RE, DurationKeys, DURATION_RE
+
+
+# In descending order of precedence for expression parsing:
+# - parentheses for grouping
+# - indexed items (e.g. a[0]: subprimitives), attribute access and method calls
+# - dates and durations (special parsing functions are dedicated to these)
+# - integers, real numbers, strings, booleans, sequences, Nones, other primitives
+# - unary operators: +, -
+# - indices (exponentiation)
+# - multiplication, division, floor division, modulo
+# - addition, subtraction
+# - bit shifts: <<, >>
+# - chainable comparators (==, !=, >, <, >=, <=)
+# - bitwise operators: ~ -> & -> ^ -> |
+# - identity and membership operators: is, is not, in, not in
+# - logical operators: 'not' -> 'and' -> 'or'
 
 
 # Date and duration parsing
@@ -45,24 +61,6 @@ from fam.compiler.utils.regex import DateKeys, DATE_RE, DurationKeys, DURATION_R
 # So extract from the group first,
 # then type-cast if it's not None,
 # else use a default value.
-
-# In descending order of precedence for expression parsing:
-# - parentheses for grouping
-# - indexed items (e.g. a[0]: subprimitives)
-# - dates and durations (special parsing functions are dedicated to these)
-# - integers, real numbers, strings, booleans, sequences, Nones, other primitives
-# - unary operators: +, -, ~
-# - indices (exponentiation)
-# - multiplication, division, floor division, modulo
-# - addition, subtraction
-# - bit shifts: <<, >>
-# - chainable comparators (==, !=, >, <, >=, <=)
-# - bitwise operators: & -> ^ -> |
-# - identity and membership operators: is, is not, in, not in
-# - logical operators: 'not' -> 'and' -> 'or'
-
-
-# Parsers for primitives
 
 def parse_date_literal(tok: Token) -> Date:
     m = DATE_RE.match(tok.string)
@@ -173,6 +171,8 @@ def parse_duration_literal(tok: Token) -> Duration:
         days, hours, minutes, seconds, frac_seconds
     )
 
+# Parsers for other primitives
+
 def parse_name(self: Parser) -> Name:
     token = self.expect(TokenType.NAME)
 
@@ -200,6 +200,9 @@ def parse_name_streak(self: Parser) -> Name:
     name_string = ' '.join(tok.string for tok in name_tokens)
 
     return Name(start_pos, end_pos, name_string)
+
+def parse_sequence(self: Parser) -> Sequence:
+
 
 # Expression parsing
 

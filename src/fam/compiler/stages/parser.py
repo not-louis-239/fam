@@ -19,10 +19,9 @@
 import re
 from typing import Callable
 
+from fam.compiler.utils.parser_helpers import parse_name
 from fam.compiler.utils.tokens import Token, TokenType
-from fam.compiler.utils.nodes import *
-from fam.compiler.utils.nesting import NESTING_INC_TOKENS, NESTING_DEC_TOKENS, NESTING_PAIRS, BRACKET_CHARS
-from fam.compiler.utils.regex import 
+from fam.compiler.utils.nodes import NodeDecl, ASTNode, AST
 from fam.errors import FamParseError
 
 
@@ -56,6 +55,12 @@ class Parser:
         token = self.peek()
         self.pos += 1
         return token
+
+    def retreat(self) -> None:
+        """Moves back by one token and returns None."""
+        if self.pos == 0:
+            raise FamParseError("cannot retreat to before start of input", self.tokens[0].start_pos, self.tokens[0].end_pos)
+        self.pos -= 1
 
     def expect(self, *acceptable_types: TokenType) -> Token:
         """Consume and return the current token and raise an error if it
@@ -99,75 +104,6 @@ class Parser:
         return ast
 
 
-# Expression parsing
-
-def parse_primary(self: Parser) -> Literal | Name:
-    token = self.advance()
-
-    match token.typ:
-        # Negative integers or real numbers
-        case TokenType.INTEGER:
-            return Integer(token.start_pos, token.end_pos, int(token.string))
-        case TokenType.REAL:
-            return Real(token.start_pos, token.end_pos, float(token.string))
-        case TokenType.STRING:
-            return String(token.start_pos, token.end_pos, token.string)
-        case TokenType.DATE:
-            return Date(token.start_pos, token.end_pos)
-        case TokenType.DURATION:
-            return Duration(token.start_pos, token.end_pos)
-        case TokenType.TRUE:
-            return Boolean(token.start_pos, token.end_pos)
-        case TokenType.FALSE:
-            return Boolean(token.start_pos, token.end_pos)
-        case TokenType.NONE:
-            return NoneItem(token.start_pos, token.end_pos)
-        case TokenType.NAME:
-            return Name(token.start_pos, token.end_pos, token.string)
-        case bad_type:
-            ...
-
-def parse_unary(self: Parser) -> Expr:
-    ...
-
-def parse_indices(self: Parser) -> Expr:
-    ...
-
-def parse_multiplication(self: Parser) -> Expr:
-    ...
-
-def parse_addition(self: Parser) -> Expr:
-    ...
-
-def parse_relational(self: Parser) -> Expr:
-    ...
-
-def parse_expr(self: Parser) -> Expr:
-    ...
-
-
-# Helper parser functions
-
-def parse_attribute(self: Parser) -> Attribute:
-    attribute_name = self.expect(TokenType.NAME)
-    self.expect(TokenType.COLON)
-    expr = parse_expr(self)
-    self.expect(TokenType.NEWLINE)
-
-    return Attribute(
-        attribute_name.start_pos,
-        expr.end_pos,
-        Name(
-            attribute_name.start_pos,
-            attribute_name.end_pos,
-            attribute_name.string
-        ),
-        expr
-    )
-
-def parse_code_block(self: Parser) -> AST:
-    ...
-
 # Main parse functions
 
 @Parser.register(TokenType.NODE)
@@ -178,10 +114,10 @@ def parse_node_decl(self: Parser) -> NodeDecl:
 
     if self.peek().typ == TokenType.METHOD:
         # Consume the 'Method' token
-        ...
+        self.advance()
 
         # Consume and record the method name
-
+        method_name = parse_name(self)
 
     else:
         # Consume the name token and save it

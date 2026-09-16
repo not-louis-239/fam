@@ -294,11 +294,17 @@ class MethodDecl(ASTNode):
     return_type: Expr | None
     body: AST
 
+# Attribute access
+
+@dataclass
+class AttributeAccess(Expr):
+    name: Expr
+    attr: Name
+
 # Method calls
 
 @dataclass
-class MethodCall(ASTNode):
-    caller: Name | None
-    name: Name
+class MethodCall(Expr):
+    name: Expr
     args: Expr
     kwargs: dict[Name, Expr]
