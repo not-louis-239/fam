@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 from fam.utils import get_days_in_month
 from fam.errors import FamParseError
 from fam.compiler.utils.tokens import TokenType, Token
-from fam.compiler.utils.nodes import AndOp, IndexOp, Sequence, LtEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, KeyValuePair, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
+from fam.compiler.utils.nodes import AndOp, IndexOp, Sequence, LtEqOp, NotEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, KeyValuePair, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
 from fam.compiler.utils.regex import DateKeys, DATE_RE, DurationKeys, DURATION_RE
 
 
@@ -202,7 +202,27 @@ def parse_name_streak(self: Parser) -> Name:
     return Name(start_pos, end_pos, name_string)
 
 def parse_sequence(self: Parser) -> Sequence:
+    elems: list[Expr] = []
 
+    start = self.expect(TokenType.L_BRACE)
+
+    while not self.eof():
+        tok = self.advance()
+
+        if tok.typ == TokenType.R_BRACE:
+            return Sequence(start.start_pos, tok.end_pos, elems)
+
+        self.retreat()
+        elems.append(parse_expr(self))
+
+        next_tok = self.peek()
+
+        if next_tok.typ == TokenType.COMMA:
+            self.advance()
+        else:
+            raise FamParseError("expected ',' after sequence element", next_tok.start_pos, next_tok.end_pos)
+
+    raise FamParseError("unexpected EOF in sequence", self.tokens[-1].start_pos, self.tokens[-1].end_pos)
 
 # Expression parsing
 
@@ -344,14 +364,18 @@ def parse_chainable_comparators(self: Parser) -> Expr:
     terms: list[Expr] = [parse_addition(self)]
     ops: list[Token] = []
 
-    # I'm inspired by Python.
-    # It has this neat thing where if you write a <= b <= c,
-    # it interprets it as a <= b and b <= c.
-    # To do this, we need a list of terms again
-    # that we eat up and then use to build a tree from the left.
+    # Chained comparisons like a >= b >= c are treated as a >= b and b >= c,
+    # so eat all the terms then build a tree from the left.
 
     # Eat all the terms
-    while not self.eof() and self.peek().typ in (TokenType.BIN_EQ, TokenType.BIN_GREATER_THAN, TokenType.BIN_LESS_THAN, TokenType.BIN_GREATER_EQ, TokenType.BIN_LESS_EQ):
+    while not self.eof() and self.peek().typ in (
+        TokenType.BIN_EQ,
+        TokenType.BIN_NOT_EQ,
+        TokenType.BIN_GREATER_THAN,
+        TokenType.BIN_LESS_THAN,
+        TokenType.BIN_GREATER_EQ,
+        TokenType.BIN_LESS_EQ
+    ):
         op_tok = self.advance()
         right = parse_addition(self)
 
@@ -373,6 +397,8 @@ def parse_chainable_comparators(self: Parser) -> Expr:
         match op_tok.typ:
             case TokenType.BIN_EQ:
                 node = EqOp(lhs.start_pos, rhs.end_pos, lhs, rhs)
+            case TokenType.BIN_NOT_EQ:
+                node = NotEqOp(lhs.start_pos, rhs.end_pos, lhs, rhs)
             case TokenType.BIN_GREATER_THAN:
                 node = GtOp(lhs.start_pos, rhs.end_pos, lhs, rhs)
             case TokenType.BIN_LESS_THAN:
@@ -381,6 +407,8 @@ def parse_chainable_comparators(self: Parser) -> Expr:
                 node = GtEqOp(lhs.start_pos, rhs.end_pos, lhs, rhs)
             case TokenType.BIN_LESS_EQ:
                 node = LtEqOp(lhs.start_pos, rhs.end_pos, lhs, rhs)
+            case _:
+                raise FamParseError(f"unexpected token {op_tok.string!r}", op_tok.start_pos, op_tok.end_pos)
 
         # Replace the left-hand side with the new node
         comparators.append(node)
@@ -410,7 +438,7 @@ def parse_binary_and(self: Parser) -> Expr:
     node = parse_unary_not(self)
 
     while not self.eof() and self.peek().typ == TokenType.BIN_AND:
-        op_tok = self.advance()
+        self.advance()
         right = parse_unary_not(self)
         node = AndOp(node.start_pos, right.end_pos, node, right)
 
@@ -420,7 +448,7 @@ def parse_binary_or(self: Parser) -> Expr:
     node = parse_binary_and(self)
 
     while not self.eof() and self.peek().typ == TokenType.BIN_OR:
-        op_tok = self.advance()
+        self.advance()
         right = parse_binary_and(self)
         node = OrOp(node.start_pos, right.end_pos, node, right)
 
