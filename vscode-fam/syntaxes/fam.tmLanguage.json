@@ -131,47 +131,77 @@
                 {
                     "comment": "define",
                     "name": "keyword.control.flow.fam",
-                    "match": "Define"
-                },
-                {
-                    "comment": "default",
-                    "name": "keyword.control.flow.fam",
-                    "match": "Default"
-                },
-                {
-                    "comment": "method",
-                    "name": "storage.type.function.fam",
-                    "match": "Method"
-                },
-                {
-                    "comment": "return",
-                    "name": "keyword.control.flow.fam",
-                    "match": "Return"
+                    "match": "\\bDefine\\b"
                 },
                 {
                     "comment": "display",
                     "name": "keyword.control.flow.fam",
-                    "match": "Display"
+                    "match": "\\bDisplay\\b"
+                },
+                {
+                    "comment": "import",
+                    "name": "keyword.control.import.fam",
+                    "match": "\\bImport\\b"
                 },
                 {
                     "comment": "if",
                     "name": "keyword.control.flow.fam",
-                    "match": "If"
+                    "match": "\\bIf\\b"
                 },
                 {
                     "comment": "else",
                     "name": "keyword.control.flow.fam",
-                    "match": "Else"
+                    "match": "\\bElse\\b"
+                },
+                {
+                    "comment": "while",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bWhile\\b"
+                },
+                {
+                    "comment": "for",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bFor\\b"
+                },
+                {
+                    "comment": "in",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bIn\\b"
+                },
+                {
+                    "comment": "break",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bBreak\\b"
+                },
+                {
+                    "comment": "continue",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bContinue\\b"
+                },
+                {
+                    "comment": "pass",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bPass\\b"
+                },
+                {
+                    "comment": "method",
+                    "name": "storage.type.function.fam",
+                    "match": "\\bMethod\\b"
+                },
+                {
+                    "comment": "return",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bReturn\\b"
                 },
                 {
                     "comment": "node",
                     "name": "storage.type.node.fam",
-                    "match": "Node"
+                    "match": "\\bNode\\b"
                 },
                 {
                     "comment": "link",
                     "name": "storage.type.link.fam",
-                    "match": "Link"
+                    "match": "\\bLink\\b"
                 },
                 {
                     "comment": "attribute",
@@ -179,19 +209,29 @@
                     "match": "\\bAttribute\\b"
                 },
                 {
+                    "comment": "default",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bDefault\\b"
+                },
+                {
+                    "comment": "from",
+                    "name": "keyword.control.flow.fam",
+                    "match": "\\bFrom\\b"
+                },
+                {
                     "comment": "constraints",
                     "name": "storage.type.constraints.fam",
-                    "match": "Constraints"
+                    "match": "\\bConstraints\\b"
                 },
                 {
                     "comment": "inferred link",
                     "name": "storage.type.link.inferred.fam",
-                    "match": "Inferred"
+                    "match": "\\bInferred\\b"
                 },
                 {
                     "comment": "implicit link",
                     "name": "storage.type.link.implicit.fam",
-                    "match": "Implicit"
+                    "match": "\\bImplicit\\b"
                 },
                 {
                     "comment": "identity operator",
@@ -204,9 +244,14 @@
                     "match": "\\bNot\\b"
                 },
                 {
-                    "comment": "no-op syntax filler",
-                    "name": "keyword.control.flow.fam",
-                    "match": "\\bPass\\b"
+                    "comment": "and",
+                    "name": "keyword.operator.logical.fam",
+                    "match": "\\bAnd\\b"
+                },
+                {
+                    "comment": "or",
+                    "name": "keyword.operator.logical.fam",
+                    "match": "\\bOr\\b"
                 }
             ]
         },
@@ -215,17 +260,17 @@
                 {
                     "comment": "built-in types",
                     "name": "support.type.builtin.fam",
-                    "match": "\\b(Integer|Int|Sequence|Seq|Real|Node|Link|Datetime|Duration|Boolean)\\b"
+                    "match": "\\b(?:Integer|Int|Sequence|Seq|Real|Node|Link|Datetime|Duration|Boolean)\\b"
                 },
                 {
                     "comment": "built-in functions",
                     "name": "support.function.builtin.fam",
-                    "match": "\\b(abs|floor|ceil|round|today|now)\\b"
+                    "match": "\\b(?:abs|floor|ceil|round|today|now)\\b"
                 },
                 {
                     "comment": "special variables",
                     "name": "variable.language.special.fam",
-                    "match": "\\b(Me|This)\\b"
+                    "match": "\\b(?:Me|This)\\b"
                 }
             ]
         },
@@ -234,17 +279,12 @@
                 {
                     "comment": "none",
                     "name": "constant.language.null.fam",
-                    "match": "None"
+                    "match": "\\bNone\\b"
                 },
                 {
-                    "comment": "true",
+                    "comment": "boolean",
                     "name": "constant.language.true.fam",
-                    "match": "True"
-                },
-                {
-                    "comment": "false",
-                    "name": "constant.language.false.fam",
-                    "match": "False"
+                    "match": "\\b(?:True|False)\\b"
                 }
             ]
         },
@@ -338,9 +378,19 @@
                     "match": "\\*"
                 },
                 {
-                    "comment": "binary divide",
+                    "comment": "floor division",
                     "name": "keyword.operator.arithmetic.fam",
-                    "match": "\\/"
+                    "match": "//"
+                },
+                {
+                    "comment": "division",
+                    "name": "keyword.operator.arithmetic.fam",
+                    "match": "/"
+                },
+                {
+                    "comment": "modulo",
+                    "name": "keyword.operator.arithmetic.fam",
+                    "match": "%"
                 },
                 {
                     "comment": "bitwise or",
@@ -348,9 +398,39 @@
                     "match": "\\|"
                 },
                 {
+                    "comment": "bitwise and",
+                    "name": "keyword.operator.bitwise.fam",
+                    "match": "\\&"
+                },
+                {
+                    "comment": "bitwise not",
+                    "name": "keyword.operator.bitwise.fam",
+                    "match": "\\~"
+                },
+                {
+                    "comment": "bitwise xor",
+                    "name": "keyword.operator.bitwise.fam",
+                    "match": "\\^"
+                },
+                {
+                    "comment": "bit shift left",
+                    "name": "keyword.operator.bitwise.fam",
+                    "match": "\\<<"
+                },
+                {
+                    "comment": "bit shift right",
+                    "name": "keyword.operator.bitwise.fam",
+                    "match": "\\>>"
+                },
+                {
                     "comment": "comparative equality",
                     "name": "keyword.operator.comparison.fam",
                     "match": "=="
+                },
+                {
+                    "comment": "comparative inequality",
+                    "name": "keyword.operator.comparison.fam",
+                    "match": "!="
                 },
                 {
                     "comment": "greater than or equal to",
@@ -387,14 +467,14 @@
                     "match": "\\."
                 },
                 {
-                    "comment": "comma",
-                    "name": "punctuation.separator.comma.fam",
-                    "match": ","
-                },
-                {
                     "comment": "colon",
                     "name": "punctuation.section.fam",
                     "match": ":"
+                },
+                {
+                    "comment": "comma",
+                    "name": "punctuation.separator.comma.fam",
+                    "match": ","
                 },
                 {
                     "comment": "parentheses, brackets, braces",

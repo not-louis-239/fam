@@ -54,9 +54,9 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bImport\b'), lambda m: Token(TokenType.IMPORT, m.group(0))),
 
     # Control flow - conditionals
+    (re.compile(r'\bElse\s+If\b'), lambda m: Token(TokenType.ELSE_IF, m.group(0))),
     (re.compile(r'\bIf\b'), lambda m: Token(TokenType.IF, m.group(0))),
     (re.compile(r'\bElse\b'), lambda m: Token(TokenType.ELSE, m.group(0))),
-    (re.compile(r'\bElse\s+If\b'), lambda m: Token(TokenType.ELSE_IF, m.group(0))),
 
     # Control flow - loops
     (re.compile(r'\bWhile\b'), lambda m: Token(TokenType.WHILE, m.group(0))),
@@ -86,6 +86,7 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bImplicit\b'), lambda m: Token(TokenType.IMPLICIT, m.group(0))),
 
     # Logical operators
+    (re.compile(r'\bNot\s+In\b'), lambda m: Token(TokenType.BIN_NOT_IN, m.group(0))),
     (re.compile(r'\bIs\s+Not\b'), lambda m: Token(TokenType.BIN_IS_NOT, m.group(0))),
     (re.compile(r'\bIs\b'), lambda m: Token(TokenType.BIN_IS, m.group(0))),
     (re.compile(r'\bNot\b'), lambda m: Token(TokenType.UN_NOT, m.group(0))),
@@ -100,11 +101,10 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     # Single-word identifiers - hyphens allowed, but no consecutive hyphens, no leading or trailing hyphens, no leading digits
     (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
-    # Arrows and assignment
+    # Arrows
     (re.compile(r'->'), lambda m: Token(TokenType.ARROW_RIGHT, m.group(0))),
     (re.compile(r'<->'), lambda m: Token(TokenType.ARROW_DOUBLE, m.group(0))),
     (re.compile(r'=>'), lambda m: Token(TokenType.ARROW_IMPLICATION, m.group(0))),
-    (re.compile(r'='), lambda m: Token(TokenType.ASSIGNMENT, m.group(0))),
 
     # Binary operators
     (re.compile(r'\+'), lambda m: Token(TokenType.BIN_ADD, m.group(0))),
@@ -130,6 +130,9 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'<='), lambda m: Token(TokenType.BIN_LESS_EQ, m.group(0))),
     (re.compile(r'>'), lambda m: Token(TokenType.BIN_GREATER_THAN, m.group(0))),
     (re.compile(r'<'), lambda m: Token(TokenType.BIN_LESS_THAN, m.group(0))),
+
+    # Assignment
+    (re.compile(r'='), lambda m: Token(TokenType.ASSIGNMENT, m.group(0))),
 
     # Punctuation - delimiters
     (re.compile(r'\.'), lambda m: Token(TokenType.DOT, m.group(0))),

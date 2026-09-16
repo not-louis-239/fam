@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 # Base AST node definition
+
 @dataclass
 class ASTNode:
     # start and end position in the original source code
@@ -29,6 +30,12 @@ class ASTNode:
 
 
 type AST = Iterable[ASTNode]
+
+# Module imports
+
+@dataclass
+class Import(ASTNode):
+    fp: str
 
 # Expressions
 
@@ -85,6 +92,7 @@ class NoneItem(Literal): pass
 
 # Sequences
 
+@dataclass
 class Sequence(Expr):
     elems: list[Expr]
 
@@ -105,10 +113,8 @@ class UnaryOp(Expr):
 class PosOp(UnaryOp): pass
 @dataclass
 class NegOp(UnaryOp): pass
-@dataclass
-class NotOp(UnaryOp): pass
 
-# Binary operators
+# Arithmetic, comparative, logical bitwise operators
 
 @dataclass
 class BinOp(Expr):
@@ -125,6 +131,8 @@ class MultOp(BinOp): pass
 @dataclass
 class DivOp(BinOp): pass
 @dataclass
+class FloorDivOp(BinOp): pass
+@dataclass
 class ModuloOp(BinOp): pass
 @dataclass
 class PowOp(BinOp): pass
@@ -133,38 +141,104 @@ class PowOp(BinOp): pass
 @dataclass
 class EqOp(BinOp): pass
 @dataclass
-class GtOp(BinOp): pass
+class NotEqOp(BinOp): pass
 @dataclass
-class GtEqOp(BinOp): pass
+class GtOp(BinOp): pass
 @dataclass
 class LtOp(BinOp): pass
 @dataclass
+class GtEqOp(BinOp): pass
+@dataclass
 class LtEqOp(BinOp): pass
 
-# Logical operators
+# Logical operators - and, or
 @dataclass
 class AndOp(BinOp): pass
 @dataclass
 class OrOp(BinOp): pass
 @dataclass
-class IdentityOp(BinOp): pass
+class NotOp(UnaryOp): pass
 
-# Bitwise operators
+# Logical operators - identity and membership
+@dataclass
+class IsOp(BinOp): pass
+@dataclass
+class IsNotOp(BinOp): pass
+@dataclass
+class InOp(BinOp): pass
+@dataclass
+class NotInOp(BinOp): pass
+
+# Bitwise operators - and, or, not, xor
 @dataclass
 class BitAndOp(BinOp): pass
 @dataclass
 class BitOrOp(BinOp): pass
 @dataclass
-class BitXorOp(BinOp): pass
-@dataclass
 class BitNotOp(UnaryOp): pass
+@dataclass
+class BitXorOp(BinOp): pass
 
-# Attribute clauses
+# Bitwise operators - shifts
+@dataclass
+class BitLShift(BinOp): pass
+@dataclass
+class BitRShift(BinOp): pass
+
+# Singular instructions
 
 @dataclass
-class Attribute(ASTNode):
+class Break(ASTNode): pass
+@dataclass
+class Continue(ASTNode): pass
+@dataclass
+class Pass(ASTNode): pass
+
+@dataclass
+class Return(ASTNode):
+    value: Expr | None
+
+# Display queries
+
+@dataclass
+class Display(ASTNode):
+    expr: Expr
+
+# Key-value pairs
+
+@dataclass
+class KeyValuePair(ASTNode):
     name: Name
     value: Expr
+
+# Variable definitions
+
+@dataclass
+class VariableDef(ASTNode):
+    typ: Expr | None
+    name: Name
+    value: Expr
+
+# Conditionals
+
+@dataclass
+class IfStmt(ASTNode):
+    condition: Expr
+    body: AST
+    else_body: AST | None
+
+# Loops
+
+@dataclass
+class WhileLoop(ASTNode):
+    condition: Expr
+    body: AST
+
+@dataclass
+class ForLoop(ASTNode):
+    var: Name
+    iterable: Expr
+    body: AST
 
 # Link definitions
 
@@ -187,20 +261,28 @@ class LinkDecl(ASTNode):
     name: Name
     src: Name
     dest: Name
-    attributes: list[Attribute]
+    attributes: list[KeyValuePair]
 
 # Node declarations
 
 @dataclass
 class NodeDecl(ASTNode):
     name: Name
-    attributes: list[Attribute]
+    attributes: list[KeyValuePair]
+
+# Attribute definitions
+
+@dataclass
+class AttributeDef(ASTNode):
+    typ: Expr
+    name: Name
+    constraints: list[Expr]
 
 # Method definitions
 
 @dataclass
 class MethodParam(ASTNode):
-    typ: Name
+    typ: Expr | None
     name: Name
     default: Expr | None
 

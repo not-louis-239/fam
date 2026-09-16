@@ -68,7 +68,8 @@ class TokenType(StrEnum):
     # Logical operators
     BIN_IS = "BinIs"
     BIN_IS_NOT = "BinIsNot"
-    UN_NOT = "BinNot"
+    BIN_NOT_IN = "BinNotIn"
+    UN_NOT = "UnNot"
     BIN_AND = "BinAnd"
     BIN_OR = "BinOr"
 

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 from fam.utils import get_days_in_month
 from fam.errors import FamParseError
 from fam.compiler.utils.tokens import TokenType, Token
-from fam.compiler.utils.nodes import AndOp, IndexOp, Literal, LtEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, Attribute, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
+from fam.compiler.utils.nodes import AndOp, IndexOp, Literal, LtEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, KeyValuePair, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
 from fam.compiler.utils.regex import DateKeys, DATE_RE, DurationKeys, DURATION_RE
 
 
@@ -58,6 +58,7 @@ from fam.compiler.utils.regex import DateKeys, DATE_RE, DurationKeys, DURATION_R
 # - bit shifts: <<, >>
 # - chainable comparators (==, !=, >, <, >=, <=)
 # - bitwise operators: & -> ^ -> |
+# - identity and membership operators: is, is not, in, not in
 # - logical operators: 'not' -> 'and' -> 'or'
 
 
@@ -452,13 +453,13 @@ def parse_expr(self: Parser) -> Expr:
 
 # Helper parser functions
 
-def parse_attribute(self: Parser) -> Attribute:
+def parse_attribute(self: Parser) -> KeyValuePair:
     attribute_name = self.expect(TokenType.NAME)
     self.expect(TokenType.COLON)
     expr = parse_expr(self)
     self.expect(TokenType.NEWLINE)
 
-    return Attribute(
+    return KeyValuePair(
         attribute_name.start_pos,
         expr.end_pos,
         Name(
