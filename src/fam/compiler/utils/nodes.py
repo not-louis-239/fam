@@ -78,6 +78,9 @@ class String(Literal):
 class Boolean(Literal):
     value: bool
 
+@dataclass
+class NoneItem(Literal): pass
+
 # Binary operators
 
 @dataclass
@@ -116,6 +119,17 @@ class BitOrOp(BinOp): pass
 class AndOp(BinOp): pass
 @dataclass
 class IdentityOp(BinOp): pass
+
+# Unary operators
+
+@dataclass
+class UnaryOp(Expr):
+    operand: Expr
+
+@dataclass
+class NotOp(UnaryOp): pass
+@dataclass
+class NegOp(UnaryOp): pass
 
 # Attribute clauses
 
@@ -164,15 +178,17 @@ class MethodParam(ASTNode):
 
 @dataclass
 class MethodDecl(ASTNode):
-    name: Name
     caller: Name | None  # The class, instances on which the method can be called. None = it's a function.
+    name: Name
     params: list[MethodParam]
+    return_type: Expr | None
     body: AST
 
 # Method calls
 
 @dataclass
 class MethodCall(ASTNode):
+    caller: Name | None
     name: Name
     args: Expr
     kwargs: dict[Name, Expr]
