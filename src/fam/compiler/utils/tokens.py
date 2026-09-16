@@ -23,22 +23,37 @@ from enum import StrEnum
 class TokenType(StrEnum):
     # In order of priority...
 
-    # Keywords
+    # Core keywords
     DEFINE = "Define"
-    DEFAULT = "Default"
-    METHOD = "Method"
-    RETURN = "Return"
     DISPLAY = "Display"
-    PASS = "Pass"
+    IMPORT = "Import"
+
+    # Control flow - conditionals
     IF = "If"
     ELSE = "Else"
+    ELSE_IF = "ElseIf"
+
+    # Control flow - loops
+    WHILE = "While"
+    FOR = "For"
+    IN = "In"
+    BREAK = "Break"
+    CONTINUE = "Continue"
+    PASS = "Pass"
+
+    # Control flow - functions
+    METHOD = "Method"
+    RETURN = "Return"
 
     # Core type keywords
     NODE = "Node"
     LINK = "Link"
-    FROM = "From"
     VARIABLE = "Variable"
     ATTRIBUTE = "Attribute"
+
+    # Core modifier keywords
+    DEFAULT = "Default"
+    FROM = "From"
     CONSTRAINTS = "Constraints"
 
     # Language constants
@@ -52,7 +67,10 @@ class TokenType(StrEnum):
 
     # Logical operators
     BIN_IS = "BinIs"
-    BIN_NOT = "BinNot"
+    BIN_IS_NOT = "BinIsNot"
+    UN_NOT = "BinNot"
+    BIN_AND = "BinAnd"
+    BIN_OR = "BinOr"
 
     # Names
     NAME = "Name"
@@ -68,17 +86,30 @@ class TokenType(StrEnum):
     ARROW_RIGHT = "ArrowRight"
     ARROW_DOUBLE = "ArrowDouble"
     ARROW_IMPLICATION = "ArrowImplication"
-    EQUALS = "Equals"
+    ASSIGNMENT = "Equals"
 
     # Binary operations
     BIN_ADD = "BinAdd"
     BIN_SUB = "BinSub"
     BIN_MUL = "BinMul"
     BIN_DIV = "BinDiv"
+    BIN_FLOOR_DIV = "BinFloorDiv"
     BIN_MODULO = "BinModulo"
     BIN_POW = "BinPow"
-    BIN_BIT_OR = "BinOr"
+
+    # Bitwise operators
+    BIN_BIT_AND = "BinBitAnd"
+    BIN_BIT_OR = "BinBitOr"
+    BIN_BIT_NOT = "BinBitNot"
+    BIN_BIT_XOR = "BinBitXor"
+
+    # Bitwise shifts
+    BIN_L_SHIFT = "BinLShift"
+    BIN_R_SHIFT = "BinRShift"
+
+    # Chainable comparators
     BIN_EQ = "BinEq"
+    BIN_NOT_EQ = "BinNotEq"
     BIN_GREATER_THAN = "BinGreaterThan"
     BIN_LESS_THAN = "BinLessThan"
     BIN_GREATER_EQ = "BinGreaterEq"
@@ -89,10 +120,12 @@ class TokenType(StrEnum):
     INDENT = "Indent"
     DEDENT = "Dedent"
 
-    # Punctuation
+    # Punctuation - delimiters
     DOT = "Dot"
     COLON = "Colon"
     COMMA = "Comma"
+
+    # Punctuation - brackets
     L_PAREN = "LParen"
     R_PAREN = "RParen"
     L_SQ_BRAC = "LSqBrac"

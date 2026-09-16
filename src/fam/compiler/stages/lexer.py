@@ -39,37 +39,58 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     # Comments
     (re.compile(r'#.*'), None),
 
-    # Parenthesised identifiers with whitespace like '(foo bar)'
+    # Parenthesised identifiers with allowed whitespace like '(foo bar)' - the parentheses are included during lexing and stripped during parsing.
     (re.compile(r'\([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*\)'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Literals
-    (re.compile(r'(?:[0-2]?[0-9]:[0-5][0-9](?::[0-5][0-9](?:\.[0-9]*)?)?\s+(?:am|pm\s+)?)?[0-3]?[0-9]-[0-1]?[0-9]-[0-9]+'), lambda m: Token(TokenType.DATE, m.group(0))),  # '((h)h:mm(:ss(.0...)) )(D)D/(M)M/(YYY)Y' Dates
+    (re.compile(r'(?:[0-2]?[0-9]:[0-5][0-9](?::[0-5][0-9](?:\.[0-9]*)?)?\s+(?:am|pm\s+)?)?[0-3]?[0-9]-[0-1]?[0-9]-[0-9]+'), lambda m: Token(TokenType.DATE, m.group(0))),  # '((h)h:mm(:ss(.0...)) )(D)D/(M)M/(YYY)Y' dates
     (re.compile(r'(?:[0-9]+d\s+)?[0-9]+:[0-5][0-9](:[0-5][0-9])?(\.[0-9]*)?'), lambda m: Token(TokenType.DURATION, m.group(0))),  # '(Xd )h:mm(:ss)(.0...)' durations
     (re.compile(r'\d+\.\d*'), lambda m: Token(TokenType.REAL, m.group(0))),  # Real numbers
     (re.compile(r'\d+'), lambda m: Token(TokenType.INTEGER, m.group(0))),  # Integers
 
     # Keywords
     (re.compile(r'\bDefine\b'), lambda m: Token(TokenType.DEFINE, m.group(0))),
-    (re.compile(r'\bDefault\b'), lambda m: Token(TokenType.DEFAULT, m.group(0))),
-    (re.compile(r'\bMethod\b'), lambda m: Token(TokenType.METHOD, m.group(0))),
-    (re.compile(r'\bReturn\b'), lambda m: Token(TokenType.RETURN, m.group(0))),
     (re.compile(r'\bDisplay\b'), lambda m: Token(TokenType.DISPLAY, m.group(0))),
+    (re.compile(r'\bImport\b'), lambda m: Token(TokenType.IMPORT, m.group(0))),
+
+    # Control flow - conditionals
     (re.compile(r'\bIf\b'), lambda m: Token(TokenType.IF, m.group(0))),
     (re.compile(r'\bElse\b'), lambda m: Token(TokenType.ELSE, m.group(0))),
-    (re.compile(r'\bPass\b'), lambda m: Token(TokenType.ELSE, m.group(0))),
+    (re.compile(r'\bElse\s+If\b'), lambda m: Token(TokenType.ELSE_IF, m.group(0))),
 
+    # Control flow - loops
+    (re.compile(r'\bWhile\b'), lambda m: Token(TokenType.WHILE, m.group(0))),
+    (re.compile(r'\bFor\b'), lambda m: Token(TokenType.FOR, m.group(0))),
+    (re.compile(r'\bIn\b'), lambda m: Token(TokenType.IN, m.group(0))),
+    (re.compile(r'\bBreak\b'), lambda m: Token(TokenType.BREAK, m.group(0))),
+    (re.compile(r'\bContinue\b'), lambda m: Token(TokenType.CONTINUE, m.group(0))),
+    (re.compile(r'\bPass\b'), lambda m: Token(TokenType.PASS, m.group(0))),
+
+    # Control flow - functions
+    (re.compile(r'\bMethod\b'), lambda m: Token(TokenType.METHOD, m.group(0))),
+    (re.compile(r'\bReturn\b'), lambda m: Token(TokenType.RETURN, m.group(0))),
+
+    # Core storage types
     (re.compile(r'\bNode\b'), lambda m: Token(TokenType.NODE, m.group(0))),
     (re.compile(r'\bLink\b'), lambda m: Token(TokenType.LINK, m.group(0))),
-    (re.compile(r'\bFrom\b'), lambda m: Token(TokenType.FROM, m.group(0))),
     (re.compile(r'\bVariable\b'), lambda m: Token(TokenType.VARIABLE, m.group(0))),
     (re.compile(r'\bAttribute\b'), lambda m: Token(TokenType.ATTRIBUTE, m.group(0))),
+
+    # Core modifier keywords
+    (re.compile(r'\bDefault\b'), lambda m: Token(TokenType.DEFAULT, m.group(0))),
+    (re.compile(r'\bFrom\b'), lambda m: Token(TokenType.FROM, m.group(0))),
     (re.compile(r'\bConstraints\b'), lambda m: Token(TokenType.CONSTRAINTS, m.group(0))),
 
+    # Link modifiers
     (re.compile(r'\bInferred\b'), lambda m: Token(TokenType.INFERRED, m.group(0))),
     (re.compile(r'\bImplicit\b'), lambda m: Token(TokenType.IMPLICIT, m.group(0))),
 
+    # Logical operators
+    (re.compile(r'\bIs\s+Not\b'), lambda m: Token(TokenType.BIN_IS_NOT, m.group(0))),
     (re.compile(r'\bIs\b'), lambda m: Token(TokenType.BIN_IS, m.group(0))),
-    (re.compile(r'\bNot\b'), lambda m: Token(TokenType.BIN_NOT, m.group(0))),
+    (re.compile(r'\bNot\b'), lambda m: Token(TokenType.UN_NOT, m.group(0))),
+    (re.compile(r'\bAnd\b'), lambda m: Token(TokenType.BIN_AND, m.group(0))),
+    (re.compile(r'\bOr\b'), lambda m: Token(TokenType.BIN_OR, m.group(0))),
 
     # Language constants
     (re.compile(r'\bNone\b'), lambda m: Token(TokenType.NONE, m.group(0))),
@@ -79,30 +100,43 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     # Single-word identifiers - hyphens allowed, but no consecutive hyphens, no leading or trailing hyphens, no leading digits
     (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
-    # Other operators
+    # Arrows and assignment
     (re.compile(r'->'), lambda m: Token(TokenType.ARROW_RIGHT, m.group(0))),
     (re.compile(r'<->'), lambda m: Token(TokenType.ARROW_DOUBLE, m.group(0))),
     (re.compile(r'=>'), lambda m: Token(TokenType.ARROW_IMPLICATION, m.group(0))),
-    (re.compile(r'='), lambda m: Token(TokenType.EQUALS, m.group(0))),
+    (re.compile(r'='), lambda m: Token(TokenType.ASSIGNMENT, m.group(0))),
 
     # Binary operators
-    (re.compile(r'=='), lambda m: Token(TokenType.BIN_EQ, m.group(0))),
-    (re.compile(r'>='), lambda m: Token(TokenType.BIN_GREATER_EQ, m.group(0))),
-    (re.compile(r'<='), lambda m: Token(TokenType.BIN_LESS_EQ, m.group(0))),
     (re.compile(r'\+'), lambda m: Token(TokenType.BIN_ADD, m.group(0))),
     (re.compile(r'-'), lambda m: Token(TokenType.BIN_SUB, m.group(0))),
     (re.compile(r'\*\*'), lambda m: Token(TokenType.BIN_POW, m.group(0))),
     (re.compile(r'\*'), lambda m: Token(TokenType.BIN_MUL, m.group(0))),
-    (re.compile(r'\/'), lambda m: Token(TokenType.BIN_DIV, m.group(0))),
+    (re.compile(r'//'), lambda m: Token(TokenType.BIN_FLOOR_DIV, m.group(0))),
+    (re.compile(r'/'), lambda m: Token(TokenType.BIN_DIV, m.group(0))),
     (re.compile(r'%'), lambda m: Token(TokenType.BIN_MODULO, m.group(0))),
+
+    # Bitwise operators
     (re.compile(r'\|'), lambda m: Token(TokenType.BIN_BIT_OR, m.group(0))),
+    (re.compile(r'&'), lambda m: Token(TokenType.BIN_BIT_AND, m.group(0))),
+    (re.compile(r'~'), lambda m: Token(TokenType.BIN_BIT_NOT, m.group(0))),
+    (re.compile(r'\^'), lambda m: Token(TokenType.BIN_BIT_XOR, m.group(0))),
+    (re.compile(r'>>'), lambda m: Token(TokenType.BIN_R_SHIFT, m.group(0))),
+    (re.compile(r'<<'), lambda m: Token(TokenType.BIN_L_SHIFT, m.group(0))),
+
+    # Chainable comparators
+    (re.compile(r'=='), lambda m: Token(TokenType.BIN_EQ, m.group(0))),
+    (re.compile(r'!='), lambda m: Token(TokenType.BIN_NOT_EQ, m.group(0))),
+    (re.compile(r'>='), lambda m: Token(TokenType.BIN_GREATER_EQ, m.group(0))),
+    (re.compile(r'<='), lambda m: Token(TokenType.BIN_LESS_EQ, m.group(0))),
     (re.compile(r'>'), lambda m: Token(TokenType.BIN_GREATER_THAN, m.group(0))),
     (re.compile(r'<'), lambda m: Token(TokenType.BIN_LESS_THAN, m.group(0))),
 
-    # Punctuation
+    # Punctuation - delimiters
     (re.compile(r'\.'), lambda m: Token(TokenType.DOT, m.group(0))),
     (re.compile(r':'), lambda m: Token(TokenType.COLON, m.group(0))),
     (re.compile(r','), lambda m: Token(TokenType.COMMA, m.group(0))),
+
+    # Punctuation - brackets, braces, parentheses
     (re.compile(r'\('), lambda m: Token(TokenType.L_PAREN, m.group(0))),
     (re.compile(r'\)'), lambda m: Token(TokenType.R_PAREN, m.group(0))),
     (re.compile(r'\{'), lambda m: Token(TokenType.L_BRACE, m.group(0))),
@@ -110,7 +144,7 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\['), lambda m: Token(TokenType.L_SQ_BRAC, m.group(0))),
     (re.compile(r'\]'), lambda m: Token(TokenType.R_SQ_BRAC, m.group(0))),
 
-    # Newlines and indentation - newline + any amount of whitespace except newlines
+    # Newlines and indentation - newline + any amount of non-newline whitespace
     (re.compile(r'\n[^\S\n]*'), lambda m: Token(TokenType.NEWLINE, m.group(0))),
 
     # Skip whitespace

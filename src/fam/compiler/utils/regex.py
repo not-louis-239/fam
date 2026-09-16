@@ -18,6 +18,7 @@
 
 
 import re
+from enum import StrEnum
 
 # Regex for splitting lexed tokens for DATE and DURATION
 
@@ -26,3 +27,24 @@ DATE_RE = re.compile(r'(?:(?P<hour>[0-2]?[0-9]):(?P<minute>[0-5][0-9])(?::(?P<se
 
 # Durations
 DURATION_RE = re.compile(r'(?:(?P<days>[0-9]+)d\s+)?(?P<hours>[0-9]+):(?P<minutes>[0-5][0-9])(:(?P<seconds>[0-5][0-9]))?(?P<fracSeconds>\.[0-9]*)?')
+
+# Keys for accessing the groups via re.Match.group()
+# They are centralised here to avoid loose strings everywhere
+# These must match the names of the capture groups EXACTLY.
+
+class DateKeys(StrEnum):
+    HOUR = "hour"
+    MINUTE = "minute"
+    SECOND = "second"
+    FRAC_SECONDS = "fracSeconds"
+    AM_PM_SUFFIX = "amPmSuffix"
+    DAY = "day"
+    MONTH = "month"
+    YEAR = "year"
+
+class DurationKeys(StrEnum):
+    DAYS = "days"
+    HOURS = "hours"
+    MINUTES = "minutes"
+    SECONDS = "seconds"
+    FRAC_SECONDS = "fracSeconds"
