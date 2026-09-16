@@ -24,12 +24,42 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from fam.compiler.stages.parser import Parser
 
-from fam.utils import get_days_in_month
+from fam.compiler.utils.nodes import (
+    AST,
+    AddOp,
+    AndOp,
+    Boolean,
+    Date,
+    DivOp,
+    Duration,
+    EqOp,
+    Expr,
+    GtEqOp,
+    GtOp,
+    IndexOp,
+    Integer,
+    KeyValuePair,
+    LtEqOp,
+    LtOp,
+    ModuloOp,
+    MultOp,
+    Name,
+    NegOp,
+    NoneItem,
+    NotEqOp,
+    NotOp,
+    OrOp,
+    PosOp,
+    PowOp,
+    Real,
+    Sequence,
+    String,
+    SubOp,
+)
+from fam.compiler.utils.regex import DATE_RE, DURATION_RE, DateKeys, DurationKeys
+from fam.compiler.utils.tokens import Token, TokenType
 from fam.errors import FamParseError
-from fam.compiler.utils.tokens import TokenType, Token
-from fam.compiler.utils.nodes import AndOp, IndexOp, Sequence, LtEqOp, NotEqOp, ModuloOp, NoneItem, Name, Integer, Boolean, Expr, KeyValuePair, AST, PowOp, Real, String, Date, Duration, NotOp, NegOp, PosOp, MultOp, DivOp, AddOp, SubOp, EqOp, GtOp, LtOp, GtEqOp, OrOp
-from fam.compiler.utils.regex import DateKeys, DATE_RE, DurationKeys, DURATION_RE
-
+from fam.utils import get_days_in_month
 
 # In descending order of precedence for expression parsing:
 # - parentheses for grouping

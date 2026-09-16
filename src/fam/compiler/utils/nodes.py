@@ -16,8 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 # Base AST node definition
 

@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from fam.compiler.utils.tokens import Token
 
 
 class FamException(Exception):

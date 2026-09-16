@@ -16,9 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from fam.compiler.utils.tokens import Token
-from fam.utils import pos_to_line_col, COL_BLUE, COL_GREEN, COL_MAGENTA, COL_YELLOW, COL_CYAN, COL_END
 from fam.compiler.utils.nodes import AST, ASTNode
+from fam.compiler.utils.tokens import Token
+from fam.utils import (
+    COL_BLUE,
+    COL_CYAN,
+    COL_END,
+    COL_GREEN,
+    COL_MAGENTA,
+    COL_YELLOW,
+    pos_to_line_col,
+)
 
 
 def visualise_tokens(tokens: list[Token], src_code: str | None = None) -> None:

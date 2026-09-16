@@ -17,14 +17,17 @@
 
 
 import re
-from typing import Callable
+from collections.abc import Callable
 
-from fam.compiler.utils.tokens import Token
-from fam.compiler.utils.tokens import TokenType
-from fam.errors import FamParseError, FamTabError, FamIndentationError
+from fam.compiler.utils.nesting import (
+    BRACKET_CHARS,
+    NESTING_DEC_TOKENS,
+    NESTING_INC_TOKENS,
+    NESTING_PAIRS,
+)
+from fam.compiler.utils.tokens import Token, TokenType
+from fam.errors import FamIndentationError, FamParseError, FamTabError
 from fam.utils import unescape_string
-from fam.compiler.utils.nesting import NESTING_INC_TOKENS, NESTING_DEC_TOKENS, NESTING_PAIRS, BRACKET_CHARS
-
 
 # TokenFactory - a function to convert a re.Match into TokenData
 type TokenFactory = Callable[[re.Match], Token]

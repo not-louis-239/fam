@@ -16,14 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import re
-from typing import Callable
+from collections.abc import Callable
 
+from fam.compiler.utils.nodes import AST, ASTNode, NodeDecl
 from fam.compiler.utils.parser_helpers import parse_name
 from fam.compiler.utils.tokens import Token, TokenType
-from fam.compiler.utils.nodes import NodeDecl, ASTNode, AST
 from fam.errors import FamParseError
-
 
 type _ParseCallable = Callable[["Parser"], ASTNode]
 

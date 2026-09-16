@@ -18,7 +18,6 @@
 
 from fam.compiler.utils.tokens import TokenType
 
-
 NESTING_INC_TOKENS = (TokenType.L_BRACE, TokenType.L_PAREN, TokenType.L_SQ_BRAC)
 NESTING_DEC_TOKENS = (TokenType.R_BRACE, TokenType.R_PAREN, TokenType.R_SQ_BRAC)
 

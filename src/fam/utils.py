@@ -1,6 +1,5 @@
 import re
 
-
 COL_END = "\033[0m"
 COL_RED = "\033[91m"
 COL_GREEN = "\033[92m"
