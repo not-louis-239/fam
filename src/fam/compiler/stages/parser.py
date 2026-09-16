@@ -21,7 +21,6 @@ from typing import Callable
 from fam.compiler.utils.tokens import Token, TokenType
 from fam.compiler.utils.nodes import AST, ASTNode, Name, Expr, NodeDecl, Attribute
 from fam.compiler.utils.nesting import NESTING_INC_TOKENS, NESTING_DEC_TOKENS, NESTING_PAIRS, BRACKET_CHARS
-from fam.compiler.debug.debug import visualise_tokens
 from fam.errors import FamParseError
 
 

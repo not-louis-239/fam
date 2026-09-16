@@ -17,6 +17,7 @@
 
 
 from dataclasses import dataclass
+from typing import Iterable
 
 # Base AST node definition
 @dataclass
@@ -27,7 +28,7 @@ class ASTNode:
     end_pos: int
 
 
-type AST = list[ASTNode]
+type AST = Iterable[ASTNode]
 
 # Expressions
 
@@ -42,7 +43,7 @@ class Name(Expr):
 # Literals
 
 @dataclass
-class Literal(ASTNode):
+class Literal(Expr):
     pass
 
 @dataclass

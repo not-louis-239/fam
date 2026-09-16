@@ -18,6 +18,7 @@
 
 from fam.compiler.utils.tokens import Token
 from fam.utils import pos_to_line_col
+from fam.compiler.utils.nodes import AST, ASTNode
 
 
 def visualise_tokens(tokens: list[Token], src_code: str | None = None) -> None:
@@ -28,3 +29,25 @@ def visualise_tokens(tokens: list[Token], src_code: str | None = None) -> None:
             print(f"    \033[94m{i: 3d}.\033[0m \033[33m{tok.typ}\033[0m \033[92m{f"'{tok.string.replace('\n', '\\n')}'"}\033[0m at line \033[95m{line + 1}\033[0m, position \033[95m{col + 1}\033[0m")
         else:
             print(f"    \033[94m{i: 3d}.\033[0m \033[33m{tok.typ}\033[0m \033[92m{f"'{tok.string.replace('\n', '\\n')}'"}\033[0m at chars \033[95m{tok.start_pos + 1} - {tok.end_pos + 1}\033[0m")
+
+
+def _dump_node(node: ASTNode, padding: int = 0, indent: int = 4):
+    print(f"\033[94m{' ' * padding}{type(node).__name__}\033[0m @ \033[95m{node.start_pos} - {node.end_pos}\033[0m:")
+    for name, value in vars(node).items():
+        if name in ("start_pos", "end_pos"):
+            continue
+        if isinstance(value, ASTNode):
+            print(f"\033[93m{' ' * (padding + indent)}{name}\033[0m: ")
+            _dump_node(value, padding + 2 * indent)
+            continue
+
+        if isinstance(value, list) and all(isinstance(e, ASTNode) for e in value):
+            print(f"\033[93m{' ' * (padding + indent)}{name}\033[0m: ")
+            dump_ast(value, padding + 2 * indent)
+            continue
+
+        print(f"{' ' * (padding + indent)}\033[93m{name}\033[0m: \033[96m{value!r}\033[0m")
+
+def dump_ast(ast: AST, padding: int = 0, indent: int = 4):
+    for node in ast:
+        _dump_node(node, padding, indent)
