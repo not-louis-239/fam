@@ -5,6 +5,7 @@
     "patterns": [
         { "include": "#strings" },
         { "include": "#comments" },
+        { "include": "#parenthesised_names"},
         { "include": "#literals" },
         { "include": "#keywords" },
         { "include": "#builtins" },
@@ -43,6 +44,28 @@
                     "comment": "line comments",
                     "name": "comment.fam",
                     "match": "#.*$"
+                }
+            ]
+        },
+        "parenthesised_names": {
+            "patterns": [
+                {
+                    "comment": "parenthesised title case names",
+                    "match": "(\\()(_*[A-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*)(\\))",
+                    "captures": {
+                        "1": { "name": "punctuation.fam" },
+                        "2": { "name": "entity.name.type.parenthesised.fam" },
+                        "3": { "name": "punctuation.fam" }
+                    }
+                },
+                {
+                    "comment": "parenthesised names",
+                    "match": "(\\()(_*[a-z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*)(\\))",
+                    "captures": {
+                        "1": { "name": "punctuation.fam" },
+                        "2": { "name": "entity.name.type.parenthesised.fam" },
+                        "3": { "name": "punctuation.fam" }
+                    }
                 }
             ]
         },
@@ -238,8 +261,8 @@
         "names": {
             "patterns": [
                 {
-                    "comment": "method",
-                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*|\\([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*(\\s+[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*)*\\))(\\()",
+                    "comment": "method call",
+                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*|\\([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*\\))(\\()",
                     "captures": {
                         "1": { "name": "punctuation.attribute-access.fam" },
                         "2": { "name": "entity.name.function.fam" },
@@ -248,7 +271,7 @@
                 },
                 {
                     "comment": "attribute access",
-                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*|\\([_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*(\\s+[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*)*\\))",
+                    "match": "(\\.)([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*|\\([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*\\))",
                     "captures": {
                         "1": { "name": "punctuation.attribute-access.fam" },
                         "2": { "name": "meta.attribute.fam" }
@@ -278,12 +301,12 @@
                 {
                     "comment": "title case identifiers",
                     "name": "entity.name.type.title-case.fam",
-                    "match": "\\b[_A-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\\b"
+                    "match": "\\b_*[A-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\\b"
                 },
                 {
                     "comment": "snake_case identifiers with hyphens",
                     "name": "entity.name.function.lowercase.fam",
-                    "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\\b"
+                    "match": "\\b_*[a-z][_a-zA-Z0-9]*(-?[_a-zA-Z0-9]+)*\\b"
                 }
             ]
         },
