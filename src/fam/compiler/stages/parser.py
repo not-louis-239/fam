@@ -16,11 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import re
 from typing import Callable
 
 from fam.compiler.utils.tokens import Token, TokenType
-from fam.compiler.utils.nodes import AST, ASTNode, Name, Expr, NodeDecl, Attribute
+from fam.compiler.utils.nodes import *
 from fam.compiler.utils.nesting import NESTING_INC_TOKENS, NESTING_DEC_TOKENS, NESTING_PAIRS, BRACKET_CHARS
+from fam.compiler.utils.regex import 
 from fam.errors import FamParseError
 
 
@@ -99,13 +101,69 @@ class Parser:
 
 # Expression parsing
 
-def parse_expr(self: Parser) ->
+def parse_primary(self: Parser) -> Literal | Name:
+    token = self.advance()
+
+    match token.typ:
+        # Negative integers or real numbers
+        case TokenType.INTEGER:
+            return Integer(token.start_pos, token.end_pos, int(token.string))
+        case TokenType.REAL:
+            return Real(token.start_pos, token.end_pos, float(token.string))
+        case TokenType.STRING:
+            return String(token.start_pos, token.end_pos, token.string)
+        case TokenType.DATE:
+            return Date(token.start_pos, token.end_pos)
+        case TokenType.DURATION:
+            return Duration(token.start_pos, token.end_pos)
+        case TokenType.TRUE:
+            return Boolean(token.start_pos, token.end_pos)
+        case TokenType.FALSE:
+            return Boolean(token.start_pos, token.end_pos)
+        case TokenType.NONE:
+            return NoneItem(token.start_pos, token.end_pos)
+        case TokenType.NAME:
+            return Name(token.start_pos, token.end_pos, token.string)
+        case bad_type:
+            ...
+
+def parse_unary(self: Parser) -> Expr:
+    ...
+
+def parse_indices(self: Parser) -> Expr:
+    ...
+
+def parse_multiplication(self: Parser) -> Expr:
+    ...
+
+def parse_addition(self: Parser) -> Expr:
+    ...
+
+def parse_relational(self: Parser) -> Expr:
+    ...
+
+def parse_expr(self: Parser) -> Expr:
+    ...
+
 
 # Helper parser functions
 
-def parse_attributes(self: Parser) -> list[Attribute]:
-    self.expect(TokenType.NAME)
+def parse_attribute(self: Parser) -> Attribute:
+    attribute_name = self.expect(TokenType.NAME)
     self.expect(TokenType.COLON)
+    expr = parse_expr(self)
+    self.expect(TokenType.NEWLINE)
+
+    return Attribute(
+        attribute_name.start_pos,
+        expr.end_pos,
+        Name(
+            attribute_name.start_pos,
+            attribute_name.end_pos,
+            attribute_name.string
+        ),
+        expr
+    )
 
 def parse_code_block(self: Parser) -> AST:
     ...

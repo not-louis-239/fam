@@ -43,10 +43,8 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\([_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*(?:\s+[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*)*\)'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Literals
-    (re.compile(r'[0-2][0-9]:[0-5][0-9]\s+[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]'), lambda m: Token(TokenType.DATE, m.group(0))),  # hh:mm DD/MM/YYYY Dates
-    (re.compile(r'[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]'), lambda m: Token(TokenType.DATE, m.group(0))),  # DD/MM/YYYY Dates
-    (re.compile(r'[0-9]+d [0-2][0-9]:[0-5][0-9]'), lambda m: Token(TokenType.DURATION, m.group(0))),  # Xd hh:mm durations
-    (re.compile(r'[0-2][0-9]:[0-5][0-9]'), lambda m: Token(TokenType.DURATION, m.group(0))),  # hh:mm durations
+    (re.compile(r'(?:[0-2][0-9]:[0-5][0-9](?::[0-5][0-9])?\s+)?[0-3][0-9]-[0-1][0-9]-[0-2][0-9][0-9][0-9]'), lambda m: Token(TokenType.DATE, m.group(0))),  # '(hh:mm(:ss) )DD/MM/YYYY' Dates
+    (re.compile(r'(?:[0-9]+d\s+)?[0-2][0-9]:[0-5][0-9](:[0-5][0-9])?'), lambda m: Token(TokenType.DURATION, m.group(0))),  # '(Xd )hh:mm(:ss)' durations
     (re.compile(r'\d+\.\d*'), lambda m: Token(TokenType.REAL, m.group(0))),  # Real numbers
     (re.compile(r'\d+'), lambda m: Token(TokenType.INTEGER, m.group(0))),  # Integers
 
@@ -111,7 +109,6 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\}'), lambda m: Token(TokenType.R_BRACE, m.group(0))),
     (re.compile(r'\['), lambda m: Token(TokenType.L_SQ_BRAC, m.group(0))),
     (re.compile(r'\]'), lambda m: Token(TokenType.R_SQ_BRAC, m.group(0))),
-
 
     # Newlines and indentation - newline + any amount of whitespace except newlines
     (re.compile(r'\n[^\S\n]*'), lambda m: Token(TokenType.NEWLINE, m.group(0))),
