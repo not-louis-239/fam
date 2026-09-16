@@ -19,4 +19,10 @@
 
 import re
 
-DATE_RE = re.compile(r'(?P<hour>[0-2][0-9]):(?P<minute>[0-5][0-9])(:(?P<second>[0-5][0-9]))?\s+(?P<day>[0-3][0-9])-(?P<month>[0-1][0-9])-(?P<year>[0-2][0-9][0-9][0-9])')
+# Regex for splitting lexed tokens for DATE and DURATION
+
+# Dates
+DATE_RE = re.compile(r'(?:(?P<hour>[0-2]?[0-9]):(?P<minute>[0-5][0-9])(?::(?P<second>[0-5][0-9])(?P<fracSeconds>\.[0-9]*)?)?\s+(?:(?P<amPmSuffix>am|pm)\s+)?)?(?P<day>[0-3]?[0-9])-(?P<month>[0-1]?[0-9])-(?P<year>[0-9]+)')
+
+# Durations
+DURATION_RE = re.compile(r'(?:(?P<days>[0-9]+)d\s+)?(?P<hours>[0-9]+):(?P<minutes>[0-5][0-9])(:(?P<seconds>[0-5][0-9]))?(?P<fracSeconds>\.[0-9]*)?')
