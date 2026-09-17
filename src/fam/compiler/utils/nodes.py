@@ -305,6 +305,5 @@ class AttributeAccess(Expr):
 
 @dataclass
 class MethodCall(Expr):
-    name: Expr
-    args: Expr
-    kwargs: dict[Name, Expr]
+    method: Expr
+    args: list[Expr]

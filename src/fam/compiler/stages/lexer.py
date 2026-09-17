@@ -123,8 +123,8 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'&'), lambda m: Token(TokenType.BIN_BIT_AND, m.group(0))),
     (re.compile(r'~'), lambda m: Token(TokenType.BIN_BIT_NOT, m.group(0))),
     (re.compile(r'\^'), lambda m: Token(TokenType.BIN_BIT_XOR, m.group(0))),
-    (re.compile(r'>>'), lambda m: Token(TokenType.BIN_R_SHIFT, m.group(0))),
-    (re.compile(r'<<'), lambda m: Token(TokenType.BIN_L_SHIFT, m.group(0))),
+    (re.compile(r'>>'), lambda m: Token(TokenType.BIN_BIT_RSHIFT, m.group(0))),
+    (re.compile(r'<<'), lambda m: Token(TokenType.BIN_BIT_LSHIFT, m.group(0))),
 
     # Chainable comparators
     (re.compile(r'=='), lambda m: Token(TokenType.BIN_EQ, m.group(0))),

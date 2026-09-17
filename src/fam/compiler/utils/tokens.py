@@ -105,8 +105,8 @@ class TokenType(StrEnum):
     BIN_BIT_XOR = "BinBitXor"
 
     # Bitwise shifts
-    BIN_L_SHIFT = "BinLShift"
-    BIN_R_SHIFT = "BinRShift"
+    BIN_BIT_LSHIFT = "BinLShift"
+    BIN_BIT_RSHIFT = "BinRShift"
 
     # Chainable comparators
     BIN_EQ = "BinEq"
