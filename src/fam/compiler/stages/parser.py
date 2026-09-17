@@ -18,8 +18,16 @@
 
 from collections.abc import Callable
 
-from fam.compiler.utils.nodes import AST, ASTNode, NodeDecl
-from fam.compiler.utils.parser_helpers import parse_name
+from fam.compiler.utils.nodes import (
+    AST,
+    KeyValuePair,
+    ASTNode,
+    NodeDecl,
+    MethodDecl,
+    MethodParam,
+    Name
+)
+from fam.compiler.utils.parser_helpers import parse_name, parse_expr, parse_code_block, parse_attribute
 from fam.compiler.utils.tokens import Token, TokenType
 from fam.errors import FamParseError
 
@@ -105,10 +113,10 @@ class Parser:
 # Main parse functions
 
 @Parser.register(TokenType.NODE)
-def parse_node_decl(self: Parser) -> NodeDecl:
+def parse_node_decl(self: Parser) -> NodeDecl | MethodDecl:
 
     # Consume the 'Node' token
-    node_token = self.expect(TokenType.NODE)
+    start_token = self.expect(TokenType.NODE)
 
     if self.peek().typ == TokenType.METHOD:
         # Consume the 'Method' token
@@ -117,16 +125,48 @@ def parse_node_decl(self: Parser) -> NodeDecl:
         # Consume and record the method name
         method_name = parse_name(self)
 
+        # Consume left bracket
+        self.expect(TokenType.L_PAREN)
+
+        # Parse params
+        params: list[MethodParam] = []
+        # TODO: finish parsing params
+
+        # Consume right bracket
+        self.expect(TokenType.R_PAREN)
+
+        # Return type
+        if self.peek().typ == TokenType.COLON:
+            return_type = None
+            self.advance()
+        else:
+            self.expect(TokenType.ARROW_RIGHT)
+            return_type = parse_expr(self)
+            self.expect(TokenType.COLON)
+
+        self.expect(TokenType.NEWLINE)
+        self.expect(TokenType.INDENT)
+
+        body = parse_code_block(self)
+
+        return MethodDecl(
+            start_token.start_pos, body[-1].end_pos,
+            Name(start_token.start_pos, start_token.end_pos, start_token.string), method_name, params,return_type, body)
+
     else:
         # Consume the name token and save it
-        name_token = self.expect(TokenType.NAME)
+        name_token = parse_name(self)
         self.expect(TokenType.COLON)
 
         self.expect(TokenType.NEWLINE)
         self.expect(TokenType.INDENT)
 
         # Parse attributes
-
+        attributes: list[KeyValuePair] = []
+        while self.peek().typ == TokenType.NAME:
+            attributes.append(parse_attribute(self))
 
         # Dedent
-        self.expect(TokenType.DEDENT)
+        dedent_token = self.expect(TokenType.DEDENT)
+
+        return NodeDecl(start_token.start_pos, dedent_token.end_pos, name_token, attributes)

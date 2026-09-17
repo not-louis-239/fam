@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from collections.abc import Iterable
+from collections.abc import Sequence as Sequence_t
 from dataclasses import dataclass
 
 # Base AST node definition
@@ -29,7 +29,7 @@ class ASTNode:
     end_pos: int
 
 
-type AST = Iterable[ASTNode]
+type AST = Sequence_t[ASTNode]
 
 # Module imports
 
