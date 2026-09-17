@@ -265,6 +265,8 @@ def parse_comma_separated_exprs(self: Parser, start_tok: TokenType, end_tok: Tok
 
         if next_tok.typ == TokenType.COMMA:
             self.advance()
+        elif next_tok.typ == end_tok:
+            continue
         else:
             raise FamParseError("expected ',' after sequence element", next_tok.start_pos, next_tok.end_pos)
 

@@ -274,7 +274,7 @@ class NodeDecl(ASTNode):
 
 @dataclass
 class AttributeDef(ASTNode):
-    typ: Expr
+    typ: Expr | None
     name: Name
     constraints: list[Expr]
 

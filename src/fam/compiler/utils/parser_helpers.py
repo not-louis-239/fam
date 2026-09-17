@@ -26,18 +26,20 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from fam.compiler.stages.parser import Parser
 
+from fam.errors import FamParseError
 from fam.compiler.utils.expression_parsers import parse_expr, parse_name
 from fam.compiler.utils.nodes import (
     AST,
     Name,
-    KeyValuePair
+    KeyValuePair,
+    MethodParam
 )
 from fam.compiler.utils.tokens import TokenType
 
 
 # Helper parser functions
 
-def parse_attribute(self: Parser) -> KeyValuePair:
+def parse_key_value_pair(self: Parser) -> KeyValuePair:
     attribute_name = self.expect(TokenType.NAME)
     self.expect(TokenType.COLON)
     expr = parse_expr(self)
@@ -54,5 +56,72 @@ def parse_attribute(self: Parser) -> KeyValuePair:
         expr
     )
 
+def parse_method_param(self: Parser) -> MethodParam:
+    names: list[Name] = []
+    while not self.eof() and self.peek().typ == TokenType.NAME:
+        names.append(parse_name(self))
+
+    if not names:
+        raise FamParseError("expected method parameter name", self.peek().start_pos, self.peek().end_pos)
+    elif len(names) == 1:
+        typ, name = None, names[0]
+    elif len(names) == 2:
+        typ, name = names
+    else:
+        raise FamParseError("too many separated names in method parameter", names[0].start_pos, names[-1].end_pos)
+
+    if self.peek().typ != TokenType.DEFAULT:
+        default = None
+        end_pos = name.end_pos
+    else:
+        self.advance()
+        default = parse_expr(self)
+        end_pos = default.end_pos
+
+    return MethodParam(names[0].start_pos, end_pos, typ, name, default)
+
+def parse_method_params(self: Parser) -> list[MethodParam]:
+    params: list[MethodParam] = []
+    default_found = False
+
+    self.expect(TokenType.L_PAREN)
+
+    while not self.eof():
+        tok = self.advance()
+
+        if tok.typ == TokenType.R_PAREN:
+            return params
+
+        self.retreat()
+
+        param = parse_method_param(self)
+
+        if param.default:
+            default_found = True
+        elif not param.default and default_found:
+            raise FamParseError("parameter with default cannot follow parameters without default", param.start_pos, param.end_pos)
+
+        params.append(param)
+
+        next_tok = self.peek()
+
+        if next_tok.typ == TokenType.COMMA:
+            self.advance()
+        elif next_tok == TokenType.R_PAREN:
+            continue
+        else:
+            raise FamParseError("expected ',' after method parameter", next_tok.start_pos, next_tok.end_pos)
+
+    raise FamParseError("unexpected EOF in method parameters", self.tokens[-1].start_pos, self.tokens[-1].end_pos)
+
 def parse_code_block(self: Parser) -> AST:
-    ...
+    self.expect(TokenType.INDENT)
+
+    stmts: AST = []
+
+    while not self.eof() and self.peek().typ != TokenType.DEDENT:
+        stmts.append(self.parse_stmt())
+
+    self.expect(TokenType.DEDENT)
+
+    return stmts
