@@ -309,7 +309,7 @@
                 },
                 {
                     "comment": "attribute value pair in node declaration",
-                    "match": "^\\s*(.+)\\s*(:)\\s*(.+)$",
+                    "match": "^\\s*(.+?)\\s*(:)\\s*(.+)$",
                     "captures": {
                         "1": { "name": "meta.attribute.fam" },
                         "2": { "name": "punctuation.section.fam" },

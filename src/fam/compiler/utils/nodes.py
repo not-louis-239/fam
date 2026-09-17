@@ -16,6 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# TODO: allow variables to be modified, including using augmented operators
+
+
 from collections.abc import Sequence as Sequence_t
 from dataclasses import dataclass
 
@@ -201,7 +204,7 @@ class Return(ASTNode):
 # Display queries
 
 @dataclass
-class Display(ASTNode):
+class DisplayStmt(ASTNode):
     expr: Expr
 
 # Key-value pairs

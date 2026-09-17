@@ -115,6 +115,8 @@ def parse_method_params(self: Parser) -> list[MethodParam]:
     raise FamParseError("unexpected EOF in method parameters", self.tokens[-1].start_pos, self.tokens[-1].end_pos)
 
 def parse_code_block(self: Parser) -> AST:
+    """Note: this also consumes the surrounding indent and dedent."""
+
     self.expect(TokenType.INDENT)
 
     stmts: AST = []

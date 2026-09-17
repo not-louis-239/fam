@@ -133,8 +133,9 @@ def parse_date_literal(tok: Token) -> Date:
         raise FamParseError(f"invalid minute value '{minute}' (must be 0-59)", tok.start_pos, tok.end_pos)
 
     # Validate hour
-    if am_pm_suffix is None and not 0 <= hour < 24:
-        raise FamParseError(f"invalid hour for 24-hour time '{hour}'", tok.start_pos, tok.end_pos)
+    if am_pm_suffix is None:
+        if not 0 <= hour < 24:
+            raise FamParseError(f"invalid hour for 24-hour time: '{hour}'", tok.start_pos, tok.end_pos)
     else:
         # Convert 12-hour to 24-hour time
         if not 1 <= hour <= 12:

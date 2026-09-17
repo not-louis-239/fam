@@ -44,14 +44,24 @@ def _dump_node(node: ASTNode, padding: int = 0, indent: int = 4):
     for name, value in vars(node).items():
         if name in ("start_pos", "end_pos"):
             continue
+
+        name_str_with_indent = f"{COL_YELLOW}{' ' * (padding + indent)}{name}{COL_END}"
+
+        if value is None:
+            print(f"{name_str_with_indent}:\n{' ' * (padding + 2 * indent)}<None>")
+            continue
+
         if isinstance(value, ASTNode):
-            print(f"{COL_YELLOW}{' ' * (padding + indent)}{name}{COL_END}: ")
+            print(f"{name_str_with_indent}:")
             _dump_node(value, padding + 2 * indent)
             continue
 
         if isinstance(value, list) and all(isinstance(e, ASTNode) for e in value):
-            print(f"{COL_YELLOW}{' ' * (padding + indent)}{name}{COL_END}: ")
-            dump_ast(value, padding + 2 * indent)
+            if not value:
+                print(f"{name_str_with_indent}:\n{' ' * (padding + 2 * indent)}<no elements>")
+            else:
+                print(f"{name_str_with_indent}:")
+                dump_ast(value, padding + 2 * indent)
             continue
 
         print(f"{' ' * (padding + indent)}{COL_YELLOW}{name}{COL_END}: {COL_CYAN}{value!r}{COL_END}")
