@@ -35,12 +35,13 @@ from fam.compiler.utils.nodes import (
     MethodParam
 )
 from fam.compiler.utils.tokens import TokenType
+from fam.compiler.utils.expression_parsers import parse_name
 
 
 # Helper parser functions
 
 def parse_key_value_pair(self: Parser) -> KeyValuePair:
-    attribute_name = self.expect(TokenType.NAME)
+    attribute_name = parse_name(self)
     self.expect(TokenType.COLON)
     expr = parse_expr(self)
     self.expect(TokenType.NEWLINE)
@@ -48,11 +49,7 @@ def parse_key_value_pair(self: Parser) -> KeyValuePair:
     return KeyValuePair(
         attribute_name.start_pos,
         expr.end_pos,
-        Name(
-            attribute_name.start_pos,
-            attribute_name.end_pos,
-            attribute_name.string
-        ),
+        attribute_name,
         expr
     )
 

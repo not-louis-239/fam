@@ -48,7 +48,9 @@ class Expr(ASTNode):
 
 @dataclass
 class Name(Expr):
-    string: str
+    # Using tuples because they have a built-in __eq__
+    # for resolving full-name identifiers during the runtime.
+    components: tuple[str, ...]
 
 # Literals
 

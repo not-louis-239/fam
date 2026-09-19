@@ -101,7 +101,10 @@ PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     (re.compile(r'\bTrue\b'), lambda m: Token(TokenType.TRUE, m.group(0))),
     (re.compile(r'\bFalse\b'), lambda m: Token(TokenType.FALSE, m.group(0))),
 
-    # Single-word identifiers - hyphens allowed, but no consecutive hyphens, no leading or trailing hyphens, no leading digits
+    # Single-word identifiers - hyphens allowed, but:
+    #   - no consecutive hyphens
+    #   - no leading or trailing hyphens
+    #   - no leading digits
     (re.compile(r'\b[_a-zA-Z][_a-zA-Z0-9]*(?:-?[_a-zA-Z0-9]+)*\b'), lambda m: Token(TokenType.NAME, m.group(0))),
 
     # Arrows

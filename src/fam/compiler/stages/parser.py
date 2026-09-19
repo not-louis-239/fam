@@ -189,7 +189,7 @@ def parse_node_decl(self: Parser) -> NodeDecl | MethodDecl:
 
         return MethodDecl(
             start_token.start_pos, body[-1].end_pos,
-            Name(start_token.start_pos, start_token.end_pos, start_token.string), method_name, params,return_type, body)
+            Name(start_token.start_pos, start_token.end_pos, (start_token.string,)), method_name, params,return_type, body)
 
     else:
         # Consume the name token(s) and save it

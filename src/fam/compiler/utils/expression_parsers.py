@@ -225,9 +225,9 @@ def parse_name(self: Parser) -> Name:
     # to one space per whitespace section
 
     no_parens = token.string.strip('()')
-    string = ' '.join(no_parens.split())
+    components = tuple(no_parens.split())
 
-    return Name(token.start_pos, token.end_pos, string)
+    return Name(token.start_pos, token.end_pos, components)
 
 # TODO: use this function in special cases where name streaks are allowed
 # TODO: in here, if parsed as a name streak, keywords like 'Node' should be
@@ -237,16 +237,16 @@ def parse_name_streak(self: Parser) -> Name:
     # to be included somewhere without surrounding parentheses,
     # so the name tokens will be parsed and then joined
     # by a space internally.
-    name_tokens: list[Token] = [self.expect(TokenType.NAME)]
+    sub_nodes: list[Name] = [parse_name(self)]
 
     while not self.eof() and self.peek().typ == TokenType.NAME:
-        name_tokens.append(self.advance())
+        sub_nodes.append(parse_name(self))
 
-    start_pos = name_tokens[0].start_pos
-    end_pos = name_tokens[-1].end_pos
-    name_string = ' '.join(tok.string for tok in name_tokens)
+    start_pos = sub_nodes[0].start_pos
+    end_pos = sub_nodes[-1].end_pos
+    name_components = tuple(comp for node in sub_nodes for comp in node.components)
 
-    return Name(start_pos, end_pos, name_string)
+    return Name(start_pos, end_pos, name_components)
 
 def parse_comma_separated_exprs(self: Parser, start_tok: TokenType, end_tok: TokenType) -> Sequence:
     elems: list[Expr] = []

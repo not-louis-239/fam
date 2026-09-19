@@ -40,8 +40,12 @@ def visualise_tokens(tokens: list[Token], src_code: str | None = None) -> None:
 
 
 def _dump_node(node: ASTNode, padding: int = 0, indent: int = 4):
-    print(f"{COL_BLUE}{' ' * padding}{type(node).__name__}{COL_END} @ {COL_MAGENTA}{node.start_pos} - {node.end_pos}{COL_END}:")
-    for name, value in vars(node).items():
+    node_vars = vars(node)
+    end = ':' if any(s for s in node_vars if s not in ("start_pos", "end_pos")) else ''
+
+    print(f"{COL_BLUE}{' ' * padding}{type(node).__name__}{COL_END} @ {COL_MAGENTA}{node.start_pos} - {node.end_pos}{COL_END}{end}")
+
+    for name, value in node_vars.items():
         if name in ("start_pos", "end_pos"):
             continue
 
