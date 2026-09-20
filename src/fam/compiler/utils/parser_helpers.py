@@ -41,7 +41,7 @@ from fam.compiler.utils.expression_parsers import parse_name
 # Helper parser functions
 
 def parse_key_value_pair(self: Parser) -> KeyValuePair:
-    attribute_name = parse_name(self)
+    attribute_name = parse_name(self, "expected attribute name")
     self.expect(TokenType.COLON)
     expr = parse_expr(self)
     self.expect(TokenType.NEWLINE)
@@ -65,7 +65,7 @@ def parse_method_param(self: Parser) -> MethodParam:
     elif len(names) == 2:
         typ, name = names
     else:
-        raise FamParseError("too many separated names in method parameter", names[0].start_pos, names[-1].end_pos)
+        raise FamParseError("too many names in method parameter", names[0].start_pos, names[-1].end_pos)
 
     if self.peek().typ != TokenType.DEFAULT:
         default = None
@@ -81,7 +81,7 @@ def parse_method_params(self: Parser) -> list[MethodParam]:
     params: list[MethodParam] = []
     default_found = False
 
-    self.expect(TokenType.L_PAREN)
+    self.expect(TokenType.L_PAREN, err_msg="expected '(' after method name")
 
     while not self.eof():
         tok = self.advance()
@@ -107,7 +107,7 @@ def parse_method_params(self: Parser) -> list[MethodParam]:
         elif next_tok == TokenType.R_PAREN:
             continue
         else:
-            raise FamParseError("expected ',' after method parameter", next_tok.start_pos, next_tok.end_pos)
+            raise FamParseError("expected ',' or ')' after method parameter", next_tok.start_pos, next_tok.end_pos)
 
     raise FamParseError("unexpected EOF in method parameters", self.tokens[-1].start_pos, self.tokens[-1].end_pos)
 

@@ -27,40 +27,58 @@ class FamException(Exception):
 
 
 class FamParseError(FamException):
+    """Invalid syntax."""
     pass
 
 
 class FamIndentationError(FamParseError):
+    """Unexpected, missing or otherwise incorrect indentation."""
     pass
 
 
 class FamTabError(FamIndentationError):
+    """Inconsistent use of tabs and spaces in indentation."""
     pass
 
 
 class FamTypeError(FamException):
+    """Bad operand or function type, incorrect arguments supplied to method."""
     pass
 
 
 class FamConstraintError(FamException):
+    """Attribute constraint violated."""
     pass
 
 
 class FamIndexError(FamException):
+    """Index out of range."""
     pass
 
 
-class FamReferenceError(FamException):
+class FamNameError(FamException):
+    """Identifier doesn't exist."""
     pass
 
 
 class FamAttributeError(FamException):
+    """Attribute doesn't exist on specified object."""
     pass
 
 
 class FamAmbiguityError(FamException):
+    """Identifier could not be resolved due to multiple valid references."""
     pass
 
 
-class FamMissingModuleError(FamException):
+class FamImportError(FamException):
+    """Import failed."""
+
+
+class FamMissingModuleError(FamImportError):
+    """Module not found."""
     pass
+
+
+class FamCircularImportError(FamImportError):
+    """Module attempts to import a module that imports the original module."""

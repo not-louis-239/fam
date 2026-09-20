@@ -217,12 +217,11 @@ def parse_duration_literal(tok: Token) -> Duration:
 
 # Parsers for other primitives
 
-def parse_name(self: Parser) -> Name:
-    token = self.expect(TokenType.NAME)
+def parse_name(self: Parser, err_msg: str = "expected name") -> Name:
+    token = self.expect(TokenType.NAME, err_msg=err_msg)
 
-    # Normalise for identifiers in parentheses
-    # and for names with spaces, normalise whitespace
-    # to one space per whitespace section
+    # Normalise identifiers in parentheses
+    # then split into components
 
     no_parens = token.string.strip('()')
     components = tuple(no_parens.split())
@@ -232,12 +231,12 @@ def parse_name(self: Parser) -> Name:
 # TODO: use this function in special cases where name streaks are allowed
 # TODO: in here, if parsed as a name streak, keywords like 'Node' should be
 # allowed to be treated as names
-def parse_name_streak(self: Parser) -> Name:
+def parse_name_streak(self: Parser, err_msg: str = "expected name") -> Name:
     # This is for when the parser allows a name with spaces
     # to be included somewhere without surrounding parentheses,
     # so the name tokens will be parsed and then joined
     # by a space internally.
-    sub_nodes: list[Name] = [parse_name(self)]
+    sub_nodes: list[Name] = [parse_name(self, err_msg=err_msg)]
 
     while not self.eof() and self.peek().typ == TokenType.NAME:
         sub_nodes.append(parse_name(self))
@@ -321,7 +320,6 @@ def parse_primary(self: Parser) -> Expr:
 
         # Names
         case TokenType.NAME:
-            # Normalise for identifiers in parentheses
             self.retreat()
             node = parse_name(self)
 
@@ -339,7 +337,7 @@ def parse_primary(self: Parser) -> Expr:
             # Attribute
             case TokenType.DOT:
                 self.advance()
-                attr_name = parse_name(self)
+                attr_name = parse_name(self, "expected attribute or method name after '.'")
 
                 node = AttributeAccess(
                     node.start_pos, attr_name.end_pos,
