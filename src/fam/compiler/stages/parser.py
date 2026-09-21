@@ -29,13 +29,17 @@ from fam.compiler.utils.nodes import (
     Break,
     Continue,
     Pass,
+    ForLoop,
+    WhileLoop,
     Return,
     LinkDef,
     ImplicitLinkDef,
+    Import,
     InferredLinkDef,
     VariableDef,
     AttributeDef,
     Expr,
+    String,
     LinkDecl,
     IfStmt,
     DisplayStmt
@@ -383,6 +387,48 @@ def parse_if_stmt(self: Parser) -> IfStmt:
                 return IfStmt(if_tok.start_pos, sub_if_stmt.end_pos, cond, body, [sub_if_stmt])
 
     return IfStmt(if_tok.start_pos, body[-1].end_pos, cond, body, None)
+
+# Parse for loop
+
+@Parser.register(TokenType.FOR)
+def parse_for(self: Parser) -> ForLoop:
+    start = self.expect(TokenType.FOR)
+    var = parse_name(self, "expected loop variable name")
+    self.expect(TokenType.IN)
+    iterable = parse_expr(self)
+    self.expect(TokenType.COLON)
+    self.expect(TokenType.NEWLINE)
+    block = parse_code_block(self)
+    self.expect(TokenType.NEWLINE)
+
+    return ForLoop(
+        start.start_pos, block[-1].end_pos,
+        var, iterable, block
+    )
+
+# Parse while loop
+
+@Parser.register(TokenType.WHILE)
+def parse_while(self: Parser) -> WhileLoop:
+    start = self.expect(TokenType.WHILE)
+    cond = parse_expr(self)
+    self.expect(TokenType.COLON)
+    self.expect(TokenType.NEWLINE)
+    block = parse_code_block(self)
+    self.expect(TokenType.NEWLINE)
+    return WhileLoop(start.start_pos, block[-1].end_pos, cond, block)
+
+# Parse imports
+
+@Parser.register(TokenType.IMPORT)
+def parse_import(self: Parser) -> Import:
+    start = self.expect(TokenType.IMPORT)
+    fp = self.expect(TokenType.STRING)
+
+    return Import(
+        start.start_pos, fp.end_pos,
+        String(fp.start_pos, fp.end_pos, fp.string)
+    )
 
 # Parse display
 

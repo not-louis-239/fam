@@ -228,7 +228,6 @@ def parse_name(self: Parser, err_msg: str = "expected name") -> Name:
 
     return Name(token.start_pos, token.end_pos, components)
 
-# TODO: use this function in special cases where name streaks are allowed
 # TODO: in here, if parsed as a name streak, keywords like 'Node' should be
 # allowed to be treated as names
 def parse_name_streak(self: Parser, err_msg: str = "expected name") -> Name:

@@ -38,7 +38,7 @@ type AST = Sequence_t[ASTNode]
 
 @dataclass
 class Import(ASTNode):
-    fp: str
+    fp: String
 
 # Expressions
 
@@ -312,3 +312,5 @@ class AttributeAccess(Expr):
 class MethodCall(Expr):
     method: Expr
     args: list[Expr]
+
+# TODO: parse variable reassignment / increment
