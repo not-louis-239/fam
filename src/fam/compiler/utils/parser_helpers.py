@@ -32,7 +32,8 @@ from fam.compiler.utils.nodes import (
     AST,
     Name,
     KeyValuePair,
-    MethodParam
+    MethodParam,
+    AttributeDef
 )
 from fam.compiler.utils.tokens import TokenType
 from fam.compiler.utils.expression_parsers import parse_name
@@ -124,3 +125,26 @@ def parse_code_block(self: Parser) -> AST:
     self.expect(TokenType.DEDENT)
 
     return stmts
+
+def parse_attribute_block(self: Parser) -> tuple[list[KeyValuePair], int]:
+    """Returns (pairs, end_pos). Also consumes the surrounding indent and dedent."""
+    self.expect(TokenType.INDENT, err_msg="expected indented block of 'key: value' pairs separated by lines")
+
+    if self.peek().typ == TokenType.PASS:
+        attributes = []
+        end_pos = self.advance().end_pos
+    else:
+        attributes: list[KeyValuePair] = []
+        while self.peek().typ == TokenType.NAME:
+            attributes.append(parse_key_value_pair(self))
+        end_pos = attributes[-1].end_pos
+
+    self.expect(TokenType.DEDENT)
+    return (attributes, end_pos)
+
+# TODO: Parse node or link methods
+def parse_node_or_link_method(self: Parser) -> MethodDecl:
+    host_class = self.expect(TokenType.NODE, TokenType.LINK)
+
+def parse_attribute_def(self: Parser) -> AttributeDef:
+    ...

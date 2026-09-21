@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# TODO: allow variables to be modified, including using augmented operators
+# TODO: parse augmented operators
 
 
 from collections.abc import Sequence as Sequence_t
@@ -303,7 +303,7 @@ class MethodDecl(ASTNode):
 
 @dataclass
 class AttributeAccess(Expr):
-    name: Expr
+    expr: Expr
     attr: Name
 
 # Method calls
@@ -313,4 +313,9 @@ class MethodCall(Expr):
     method: Expr
     args: list[Expr]
 
-# TODO: parse variable reassignment / increment
+# Variable or attribute reassignment
+
+@dataclass
+class VariableAssign(Expr):
+    var: Expr  # name, index or attribute
+    expr: Expr

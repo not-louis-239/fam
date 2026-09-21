@@ -38,13 +38,14 @@ from fam.compiler.utils.nodes import (
     InferredLinkDef,
     VariableDef,
     AttributeDef,
+    VariableAssign,
     Expr,
     String,
     LinkDecl,
     IfStmt,
     DisplayStmt
 )
-from fam.compiler.utils.parser_helpers import parse_method_params, parse_code_block, parse_key_value_pair
+from fam.compiler.utils.parser_helpers import parse_method_params, parse_attribute_block, parse_code_block, parse_key_value_pair
 from fam.compiler.utils.expression_parsers import parse_name_streak, parse_name, parse_expr
 from fam.compiler.utils.tokens import Token, TokenType
 from fam.errors import FamParseError, FamIndentationError
@@ -225,21 +226,9 @@ def parse_node_decl(self: Parser) -> NodeDecl | MethodDecl:
         self.expect(TokenType.COLON)
 
         self.expect(TokenType.NEWLINE)
-        self.expect(TokenType.INDENT, err_msg="expected indented block in node declaration")
 
         # Parse attributes
-        if self.peek().typ == TokenType.PASS:
-            attributes = []
-            end_pos = self.advance().end_pos
-        else:
-            attributes: list[KeyValuePair] = []
-            while self.peek().typ == TokenType.NAME:
-                attributes.append(parse_key_value_pair(self))
-            end_pos = attributes[-1].end_pos
-
-        # Dedent
-        self.expect(TokenType.DEDENT)
-
+        attributes, end_pos = parse_attribute_block(self)
         return NodeDecl(start_token.start_pos, end_pos, name_token, attributes)
 
 # Parse link declarations
@@ -248,6 +237,10 @@ def parse_node_decl(self: Parser) -> NodeDecl | MethodDecl:
 def parse_link_decl(self: Parser) -> LinkDecl:
     start = self.expect(TokenType.LINK)
     link_name = parse_name_streak(self, "expected link name")
+
+    # If the parser sees a 'Method' token here, retreat and instead parse
+    # this as a link method
+
     self.expect(TokenType.FROM, err_msg="expected 'From' after link name")
     src = parse_name_streak(self, "expected source node name")
     self.expect(TokenType.ARROW_RIGHT, err_msg="expected '->' after source node")
@@ -255,6 +248,7 @@ def parse_link_decl(self: Parser) -> LinkDecl:
     self.expect(TokenType.NEWLINE)
     return LinkDecl(start.start_pos, dest.end_pos, link_name, src, dest, [])
     # TODO: eventually parse link methods
+    # TODO: use a separate function to parse link and node methods
 
 # Define keyword
 
@@ -288,7 +282,7 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
     kw = self.advance()
 
     match kw.typ:
-        # Attributes
+        # Node attributes
         case TokenType.ATTRIBUTE:
             attr_name = parse_name(self, "expected attribute name")
             self.expect(TokenType.COLON)
@@ -399,7 +393,6 @@ def parse_for(self: Parser) -> ForLoop:
     self.expect(TokenType.COLON)
     self.expect(TokenType.NEWLINE)
     block = parse_code_block(self)
-    self.expect(TokenType.NEWLINE)
 
     return ForLoop(
         start.start_pos, block[-1].end_pos,
@@ -424,11 +417,34 @@ def parse_while(self: Parser) -> WhileLoop:
 def parse_import(self: Parser) -> Import:
     start = self.expect(TokenType.IMPORT)
     fp = self.expect(TokenType.STRING)
+    self.expect(TokenType.NEWLINE)
 
     return Import(
         start.start_pos, fp.end_pos,
         String(fp.start_pos, fp.end_pos, fp.string)
     )
+
+# Statements that start with a name
+
+@Parser.register(TokenType.NAME)
+def parse_open_name(self: Parser) -> Expr:
+    var = parse_expr(self)
+
+    next_tok = self.peek()
+    match next_tok.typ:
+        # Open expression or method call
+        case TokenType.NEWLINE:
+            self.advance()
+            return var
+
+        # TODO: Augmented assignment
+
+        # Assignment
+        case TokenType.ASSIGNMENT:
+            self.advance()
+            rhs = parse_expr(self)
+            self.expect(TokenType.NEWLINE)
+            return VariableAssign(var.start_pos, rhs.end_pos, var, rhs)
 
 # Parse display
 
