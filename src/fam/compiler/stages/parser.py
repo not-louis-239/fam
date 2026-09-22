@@ -21,10 +21,25 @@ from collections.abc import Callable
 from fam.compiler.utils.nodes import (
     AST,
     KeyValuePair,
+    AddOp,
+    SubOp,
+    MultOp,
+    DivOp,
+    FloorDivOp,
+    ModuloOp,
+    PowOp,
+    BitAndOp,
+    BitOrOp,
+    BitXorOp,
+    BitNotOp,
+    BitLShift,
+    BitRShift,
     ASTNode,
     NodeDecl,
     MethodDecl,
     MethodParam,
+    IndexOp,
+    AttributeAccess,
     Name,
     Break,
     Continue,
@@ -45,8 +60,8 @@ from fam.compiler.utils.nodes import (
     IfStmt,
     DisplayStmt
 )
-from fam.compiler.utils.parser_helpers import parse_method_params, parse_attribute_block, parse_code_block, parse_key_value_pair
-from fam.compiler.utils.expression_parsers import parse_name_streak, parse_name, parse_expr
+from fam.compiler.utils.parser_helpers import parse_node_or_link_method, parse_attribute_block, parse_code_block, parse_key_value_pair
+from fam.compiler.utils.expression_parsers import parse_primary, parse_name_streak, parse_name, parse_expr
 from fam.compiler.utils.tokens import Token, TokenType
 from fam.errors import FamParseError, FamIndentationError
 
@@ -189,36 +204,13 @@ def parse_return(self: Parser) -> Return:
 
 @Parser.register(TokenType.NODE)
 def parse_node_decl(self: Parser) -> NodeDecl | MethodDecl:
-
     # Consume the 'Node' token
     start_token = self.expect(TokenType.NODE)
 
     if self.peek().typ == TokenType.METHOD:
-        # Consume the 'Method' token
-        self.advance()
-
-        # Consume and record the method name
-        method_name = parse_name(self, "expected method name")
-
-        # Parse params
-        params: list[MethodParam] = parse_method_params(self)
-
-        # Return type
-        if self.peek().typ == TokenType.COLON:
-            return_type = None
-            self.advance()
-        else:
-            self.expect(TokenType.ARROW_RIGHT, err_msg="expected '->' or ':' after method parameters")
-            return_type = parse_expr(self)
-            self.expect(TokenType.COLON)
-
-        self.expect(TokenType.NEWLINE)
-
-        body = parse_code_block(self)
-
-        return MethodDecl(
-            start_token.start_pos, body[-1].end_pos,
-            Name(start_token.start_pos, start_token.end_pos, (start_token.string,)), method_name, params,return_type, body)
+        # Re-parse as method if 'Method' token present
+        self.retreat()
+        return parse_node_or_link_method(self)
 
     else:
         # Consume the name token(s) and save it
@@ -234,12 +226,14 @@ def parse_node_decl(self: Parser) -> NodeDecl | MethodDecl:
 # Parse link declarations
 
 @Parser.register(TokenType.LINK)
-def parse_link_decl(self: Parser) -> LinkDecl:
+def parse_link_decl(self: Parser) -> LinkDecl | MethodDecl:
     start = self.expect(TokenType.LINK)
-    link_name = parse_name_streak(self, "expected link name")
 
-    # If the parser sees a 'Method' token here, retreat and instead parse
-    # this as a link method
+    if self.peek().typ == TokenType.METHOD:
+        self.retreat()
+        return parse_node_or_link_method(self)
+
+    link_name = parse_name_streak(self, "expected link name")
 
     self.expect(TokenType.FROM, err_msg="expected 'From' after link name")
     src = parse_name_streak(self, "expected source node name")
@@ -247,8 +241,6 @@ def parse_link_decl(self: Parser) -> LinkDecl:
     dest = parse_name_streak(self, "expected destination node name")
     self.expect(TokenType.NEWLINE)
     return LinkDecl(start.start_pos, dest.end_pos, link_name, src, dest, [])
-    # TODO: eventually parse link methods
-    # TODO: use a separate function to parse link and node methods
 
 # Define keyword
 
@@ -425,26 +417,88 @@ def parse_import(self: Parser) -> Import:
     )
 
 # Statements that start with a name
+AUGMENTED_ASSIGNMENT_OPS: list[TokenType] = [
+    TokenType.BIN_ADD,
+    TokenType.BIN_SUB,
+    TokenType.BIN_MUL,
+    TokenType.BIN_DIV,
+    TokenType.BIN_FLOOR_DIV,
+    TokenType.BIN_MODULO,
+    TokenType.BIN_POW,
+    TokenType.BIN_BIT_AND,
+    TokenType.BIN_BIT_OR,
+    TokenType.BIN_BIT_XOR,
+    TokenType.BIN_BIT_LSHIFT,
+    TokenType.BIN_BIT_RSHIFT
+]
 
 @Parser.register(TokenType.NAME)
-def parse_open_name(self: Parser) -> Expr:
-    var = parse_expr(self)
+def parse_open_name(self: Parser) -> VariableAssign | Expr:
+    var = parse_primary(self)
 
     next_tok = self.peek()
-    match next_tok.typ:
-        # Open expression or method call
-        case TokenType.NEWLINE:
-            self.advance()
-            return var
 
-        # TODO: Augmented assignment
+    if next_tok.typ == TokenType.NEWLINE:
+        self.advance()
+        return var
 
-        # Assignment
-        case TokenType.ASSIGNMENT:
-            self.advance()
-            rhs = parse_expr(self)
-            self.expect(TokenType.NEWLINE)
-            return VariableAssign(var.start_pos, rhs.end_pos, var, rhs)
+    # Assignment
+    elif next_tok.typ == TokenType.ASSIGNMENT:
+        if not isinstance(var, (Name, IndexOp, AttributeAccess)):
+            raise FamParseError("illegal left-hand side of assignment", var.start_pos, var.end_pos)
+
+        self.advance()
+        rhs = parse_expr(self)
+        self.expect(TokenType.NEWLINE)
+        return VariableAssign(var.start_pos, rhs.end_pos, var, rhs)
+
+    # Augmented assignment
+    if next_tok.typ not in AUGMENTED_ASSIGNMENT_OPS:
+        raise FamParseError(f"invalid syntax", next_tok.start_pos, next_tok.end_pos)
+
+    if not isinstance(var, (Name, IndexOp, AttributeAccess)):
+        raise FamParseError("illegal left-hand side of augmented assignment", var.start_pos, var.end_pos)
+
+    augmented_op = self.advance()
+    self.expect(TokenType.ASSIGNMENT)
+
+    rhs = parse_expr(self)
+    self.expect(TokenType.NEWLINE)
+
+    match augmented_op.typ:
+        case TokenType.BIN_ADD:
+            node = AddOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_SUB:
+            node = SubOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_MUL:
+            node = MultOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_DIV:
+            node = DivOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_FLOOR_DIV:
+            node = FloorDivOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_MODULO:
+            node = ModuloOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_POW:
+            node = PowOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_BIT_AND:
+            node = BitAndOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_BIT_OR:
+            node = BitOrOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_BIT_XOR:
+            node = BitXorOp(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_BIT_LSHIFT:
+            node = BitLShift(var.start_pos, rhs.end_pos, var, rhs)
+        case TokenType.BIN_BIT_RSHIFT:
+            node = BitRShift(var.start_pos, rhs.end_pos, var, rhs)
+        case uncaught:
+            raise RuntimeError(f"missing handler for augmented assignment operator: {uncaught!r}")
+
+    return VariableAssign(
+        var.start_pos, rhs.end_pos,
+        var, node
+    )
+
+
 
 # Parse display
 

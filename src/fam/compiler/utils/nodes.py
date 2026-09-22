@@ -16,9 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# TODO: parse augmented operators
-
-
 from collections.abc import Sequence as Sequence_t
 from dataclasses import dataclass
 
@@ -316,6 +313,6 @@ class MethodCall(Expr):
 # Variable or attribute reassignment
 
 @dataclass
-class VariableAssign(Expr):
+class VariableAssign(ASTNode):
     var: Expr  # name, index or attribute
     expr: Expr

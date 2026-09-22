@@ -31,6 +31,7 @@ from fam.compiler.utils.expression_parsers import parse_expr, parse_name
 from fam.compiler.utils.nodes import (
     AST,
     Name,
+    MethodDecl,
     KeyValuePair,
     MethodParam,
     AttributeDef
@@ -142,9 +143,42 @@ def parse_attribute_block(self: Parser) -> tuple[list[KeyValuePair], int]:
     self.expect(TokenType.DEDENT)
     return (attributes, end_pos)
 
-# TODO: Parse node or link methods
+def parse_method(self: Parser) -> MethodDecl:
+    start_token = self.expect(TokenType.METHOD)
+
+    # Consume and record the method name
+    method_name = parse_name(self, "expected method name")
+
+    # Parse params
+    params: list[MethodParam] = parse_method_params(self)
+
+    # Return type
+    if self.peek().typ == TokenType.COLON:
+        return_type = None
+        self.advance()
+    else:
+        self.expect(TokenType.ARROW_RIGHT, err_msg="expected '->' or ':' after method parameters")
+        return_type = parse_expr(self)
+        self.expect(TokenType.COLON)
+
+    self.expect(TokenType.NEWLINE)
+
+    body = parse_code_block(self)
+
+    return MethodDecl(
+        start_token.start_pos, body[-1].end_pos,
+        Name(start_token.start_pos, start_token.end_pos, (start_token.string,)),
+        method_name, params,return_type, body
+    )
+
 def parse_node_or_link_method(self: Parser) -> MethodDecl:
     host_class = self.expect(TokenType.NODE, TokenType.LINK)
+    decl_node = parse_method(self)
+
+    decl_node.caller = Name(host_class.start_pos, host_class.end_pos, (host_class.string,))
+    decl_node.start_pos = host_class.start_pos
+
+    return decl_node
 
 def parse_attribute_def(self: Parser) -> AttributeDef:
     ...

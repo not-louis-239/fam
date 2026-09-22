@@ -36,8 +36,7 @@ type TokenFactory = Callable[[re.Match], Token]
 # Patterns - a list of regex patterns, and the token factory to use when it finds that pattern, or None if it is to be skipped
 PATTERNS: list[tuple[re.Pattern, TokenFactory | None]] = [
     # Strings
-    # TODO: this should have support for single-quoted strings as well...
-    (re.compile(r'"(?:[^"\\]|\\.)*"'), lambda m: Token(TokenType.STRING, unescape_string(m.group(0)))),
+    (re.compile(r'(["\'])(?:(?!\1)[^\\]|\\.)*\1'), lambda m: Token(TokenType.STRING, unescape_string(m.group(0)))),
 
     # Comments
     (re.compile(r'#.*'), None),
