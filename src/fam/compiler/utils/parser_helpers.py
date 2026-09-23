@@ -265,7 +265,6 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
 
             self.expect(TokenType.DEDENT)
             self.expect(TokenType.DEDENT)
-
             return AttributeDef(define_tok.start_pos, constraints[-1].end_pos, typ_expr, attr_name, constraints)
 
         # Variables
@@ -273,6 +272,7 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
             var_name = parse_name(self, "expected variable name")
             self.expect(TokenType.ASSIGNMENT, err_msg="expected '=' after variable name")
             value = parse_expr(self)
+            self.expect(TokenType.NEWLINE)
             node = VariableDef(define_tok.start_pos, value.end_pos, typ_expr, var_name, value)
 
         # Links
@@ -321,5 +321,4 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
         case _:
             raise FamParseError(f"unexpected token {kw.string!r}", kw.start_pos, kw.end_pos)
 
-    self.expect(TokenType.NEWLINE)
     return node

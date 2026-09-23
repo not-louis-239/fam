@@ -128,7 +128,7 @@ class Parser:
             elif TokenType.COLON in acceptable_types:
                 msg = "expected ':'"
             else:
-                msg = "invalid syntax"
+                msg = err_msg or "invalid syntax"
 
             raise FamParseError(msg, start_pos=tok.start_pos, end_pos=tok.end_pos)
         return tok
@@ -263,9 +263,12 @@ def parse_if_stmt(self: Parser) -> IfStmt:
     body = parse_code_block(self)
 
     while not self.eof() and self.peek().typ in (TokenType.ELSE, TokenType.ELSE_IF):
-        next_tok = self.advance()
+        next_tok = self.peek()
         match next_tok.typ:
             case TokenType.ELSE:
+                self.advance()
+                self.expect(TokenType.COLON)
+                self.expect(TokenType.NEWLINE)
                 else_body = parse_code_block(self)
                 return IfStmt(if_tok.start_pos, body[-1].end_pos, cond, body, else_body)
             case TokenType.ELSE_IF:
@@ -300,7 +303,6 @@ def parse_while(self: Parser) -> WhileLoop:
     self.expect(TokenType.COLON)
     self.expect(TokenType.NEWLINE)
     block = parse_code_block(self)
-    self.expect(TokenType.NEWLINE)
     return WhileLoop(start.start_pos, block[-1].end_pos, cond, block)
 
 # Parse imports
