@@ -37,7 +37,6 @@ from fam.compiler.utils.nodes import (
     ASTNode,
     NodeDecl,
     MethodDecl,
-    MethodParam,
     IndexOp,
     AttributeAccess,
     Name,
@@ -60,7 +59,7 @@ from fam.compiler.utils.nodes import (
     IfStmt,
     DisplayStmt
 )
-from fam.compiler.utils.parser_helpers import parse_node_or_link_method, parse_attribute_block, parse_code_block, parse_key_value_pair
+from fam.compiler.utils.parser_helpers import parse_link_attribute_defs, parse_node_or_link_method, parse_attribute_block, parse_code_block, parse_key_value_pair, parse_define as _parse_define
 from fam.compiler.utils.expression_parsers import parse_primary, parse_name_streak, parse_name, parse_expr
 from fam.compiler.utils.tokens import Token, TokenType
 from fam.errors import FamParseError, FamIndentationError
@@ -239,118 +238,19 @@ def parse_link_decl(self: Parser) -> LinkDecl | MethodDecl:
     src = parse_name_streak(self, "expected source node name")
     self.expect(TokenType.ARROW_RIGHT, err_msg="expected '->' after source node")
     dest = parse_name_streak(self, "expected destination node name")
-    self.expect(TokenType.NEWLINE)
-    return LinkDecl(start.start_pos, dest.end_pos, link_name, src, dest, [])
+    tok = self.expect(TokenType.COLON, TokenType.NEWLINE)
+
+    if tok.typ == TokenType.NEWLINE:
+        return LinkDecl(start.start_pos, dest.end_pos, link_name, src, dest, [])
+
+    link_attrs = parse_attribute_block(self)
+    return LinkDecl(start.start_pos, link_attrs[1], link_name, src, dest, link_attrs[0])
 
 # Define keyword
 
 @Parser.register(TokenType.DEFINE)
 def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | InferredLinkDef | ImplicitLinkDef:
-    define_tok = self.advance()
-
-    # For attributes or variables, parse type expression
-    if self.peek().typ not in (
-        TokenType.ATTRIBUTE,
-        TokenType.VARIABLE,
-        TokenType.LINK,
-        TokenType.INFERRED,
-        TokenType.IMPLICIT
-    ):
-        typ_expr = parse_expr(self)
-    else:
-        typ_expr = None
-
-    if typ_expr is not None:
-        if (bad_tok := self.peek()).typ in (
-            TokenType.LINK,
-            TokenType.INFERRED,
-            TokenType.IMPLICIT
-        ):
-            raise FamParseError(
-                "expected attribute or variable definition after type annotation",
-                bad_tok.start_pos, bad_tok.end_pos
-            )
-
-    kw = self.advance()
-
-    match kw.typ:
-        # Node attributes
-        case TokenType.ATTRIBUTE:
-            attr_name = parse_name(self, "expected attribute name")
-            self.expect(TokenType.COLON)
-
-            self.expect(TokenType.NEWLINE)
-            self.expect(TokenType.INDENT, err_msg="expected indented block in attribute definition")
-
-            tok = self.expect(TokenType.CONSTRAINTS, TokenType.PASS, err_msg="expected 'Constraints' or 'Pass' in attribute definition")
-
-            if tok.typ == TokenType.PASS:
-                self.expect(TokenType.NEWLINE)
-                self.expect(TokenType.DEDENT)
-                return AttributeDef(define_tok.start_pos, tok.end_pos, typ_expr, attr_name, [])
-
-            self.expect(TokenType.COLON)
-            self.expect(TokenType.NEWLINE)
-            self.expect(TokenType.INDENT, err_msg="expected indented block in constraints section of attribute definition")
-            constraints: list[Expr] = []
-
-            while not self.eof() and self.peek().typ != TokenType.DEDENT:
-                constraints.append(parse_expr(self))
-                self.expect(TokenType.NEWLINE)
-
-            self.expect(TokenType.DEDENT)
-            self.expect(TokenType.DEDENT)
-
-            return AttributeDef(define_tok.start_pos, constraints[-1].end_pos, typ_expr, attr_name, constraints)
-
-        # Variables
-        case TokenType.VARIABLE:
-            var_name = parse_name(self, "expected variable name")
-            self.expect(TokenType.ASSIGNMENT, err_msg="expected '=' after variable name")
-            value = parse_expr(self)
-            node = VariableDef(define_tok.start_pos, value.end_pos, typ_expr, var_name, value)
-
-        # Links
-        # TODO: eventually allow links to have attributes defined
-        # under their definitions
-        case TokenType.LINK:
-            name = parse_name(self, "expected link name")
-            node = LinkDef(define_tok.start_pos, name.end_pos, name)
-
-        # Inferred Links
-        case TokenType.INFERRED:
-            self.expect(TokenType.LINK, err_msg="expected 'Link' after link modifier keyword 'Inferred'")
-            name = parse_name(self, "expected link name")
-            self.expect(TokenType.ARROW_DOUBLE, err_msg="expected '<->' after link name in inferred link declaration")
-            inferred_name = parse_name(self, "expected inferred link name")
-            node = InferredLinkDef(define_tok.start_pos, inferred_name.end_pos, name, inferred_name)
-
-        # Implicit Links
-        case TokenType.IMPLICIT:
-            self.expect(TokenType.LINK, err_msg="expected 'Link' after link modifier keyword 'Implicit'")
-
-            links: list[Name] = [parse_name(self, "expected one or more link names in implicit link definition")]
-
-            while True:
-                tok = self.expect(
-                    TokenType.ARROW_RIGHT, TokenType.ARROW_IMPLICATION,
-                    err_msg="expected '->' or '=>' in implicit link declaration"
-                )
-
-                match tok.typ:
-                    case TokenType.ARROW_RIGHT:
-                        links.append(parse_name(self, "expected link name after '->' in implicit link definition"))
-                    case TokenType.ARROW_IMPLICATION:
-                        implied = parse_name(self, "expected implicit link name")
-                        break
-
-            node = ImplicitLinkDef(define_tok.start_pos, implied.end_pos, implied, links)
-
-        case _:
-            raise FamParseError(f"unexpected token {kw.string!r}", kw.start_pos, kw.end_pos)
-
-    self.expect(TokenType.NEWLINE)
-    return node
+    return _parse_define(self)
 
 # Conditionals
 

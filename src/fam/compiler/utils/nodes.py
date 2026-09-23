@@ -247,6 +247,7 @@ class ForLoop(ASTNode):
 @dataclass
 class LinkDef(ASTNode):
     name: Name
+    attr_defs: list[AttributeDef]
 
 @dataclass
 class InferredLinkDef(LinkDef):

@@ -34,7 +34,13 @@ from fam.compiler.utils.nodes import (
     MethodDecl,
     KeyValuePair,
     MethodParam,
-    AttributeDef
+    AttributeDef,
+    ImplicitLinkDef,
+    LinkDef,
+    AttributeDef,
+    VariableDef,
+    InferredLinkDef,
+    Expr
 )
 from fam.compiler.utils.tokens import TokenType
 from fam.compiler.utils.expression_parsers import parse_name
@@ -180,5 +186,140 @@ def parse_node_or_link_method(self: Parser) -> MethodDecl:
 
     return decl_node
 
-def parse_attribute_def(self: Parser) -> AttributeDef:
-    ...
+def parse_link_attribute_defs(self: Parser) -> tuple[list[AttributeDef], int]:
+    """Returns (pairs, end_pos). Consumes the surrounding indent and dedent."""
+
+    self.expect(TokenType.INDENT)
+
+    if self.peek().typ == TokenType.PASS:
+        tok = self.advance()
+        self.expect(TokenType.NEWLINE)
+        self.expect(TokenType.DEDENT)
+        return ([], tok.end_pos)
+
+    attrs: list[AttributeDef] = []
+    while not self.eof() and self.peek().typ == TokenType.DEFINE:
+        attr_def_node = parse_define(self)
+        if not isinstance(attr_def_node, AttributeDef):
+            raise FamParseError(
+                "expected attribute definitions or 'Pass' under link definition",
+                attr_def_node.start_pos, attr_def_node.end_pos
+            )
+        attrs.append(attr_def_node)
+
+    self.expect(TokenType.DEDENT)
+    return (attrs, attrs[-1].end_pos)
+
+def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | InferredLinkDef | ImplicitLinkDef:
+    define_tok = self.advance()
+
+    # For attributes or variables, parse type expression
+    if self.peek().typ not in (
+        TokenType.ATTRIBUTE,
+        TokenType.VARIABLE,
+        TokenType.LINK,
+        TokenType.INFERRED,
+        TokenType.IMPLICIT
+    ):
+        typ_expr = parse_expr(self)
+    else:
+        typ_expr = None
+
+    if typ_expr is not None:
+        if (bad_tok := self.peek()).typ in (
+            TokenType.LINK,
+            TokenType.INFERRED,
+            TokenType.IMPLICIT
+        ):
+            raise FamParseError(
+                "expected attribute or variable definition after type annotation",
+                bad_tok.start_pos, bad_tok.end_pos
+            )
+
+    kw = self.advance()
+
+    match kw.typ:
+        # Node attributes
+        case TokenType.ATTRIBUTE:
+            attr_name = parse_name(self, "expected attribute name")
+            self.expect(TokenType.COLON)
+
+            self.expect(TokenType.NEWLINE)
+            self.expect(TokenType.INDENT, err_msg="expected indented block in attribute definition")
+
+            tok = self.expect(TokenType.CONSTRAINTS, TokenType.PASS, err_msg="expected 'Constraints' or 'Pass' in attribute definition")
+
+            if tok.typ == TokenType.PASS:
+                self.expect(TokenType.NEWLINE)
+                self.expect(TokenType.DEDENT)
+                return AttributeDef(define_tok.start_pos, tok.end_pos, typ_expr, attr_name, [])
+
+            self.expect(TokenType.COLON)
+            self.expect(TokenType.NEWLINE)
+            self.expect(TokenType.INDENT, err_msg="expected indented block in constraints section of attribute definition")
+            constraints: list[Expr] = []
+
+            while not self.eof() and self.peek().typ != TokenType.DEDENT:
+                constraints.append(parse_expr(self))
+                self.expect(TokenType.NEWLINE)
+
+            self.expect(TokenType.DEDENT)
+            self.expect(TokenType.DEDENT)
+
+            return AttributeDef(define_tok.start_pos, constraints[-1].end_pos, typ_expr, attr_name, constraints)
+
+        # Variables
+        case TokenType.VARIABLE:
+            var_name = parse_name(self, "expected variable name")
+            self.expect(TokenType.ASSIGNMENT, err_msg="expected '=' after variable name")
+            value = parse_expr(self)
+            node = VariableDef(define_tok.start_pos, value.end_pos, typ_expr, var_name, value)
+
+        # Links
+        case TokenType.LINK:
+            name = parse_name(self, "expected link name")
+            self.expect(TokenType.COLON)
+            self.expect(TokenType.NEWLINE)
+            attr_defs, end_pos = parse_link_attribute_defs(self)
+            node = LinkDef(define_tok.start_pos, end_pos, name, attr_defs)
+
+        # Inferred Links
+        case TokenType.INFERRED:
+            self.expect(TokenType.LINK, err_msg="expected 'Link' after link modifier keyword 'Inferred'")
+            name = parse_name(self, "expected link name")
+            self.expect(TokenType.ARROW_DOUBLE, err_msg="expected '<->' after link name in inferred link declaration")
+            inferred_name = parse_name(self, "expected inferred link name")
+            self.expect(TokenType.COLON)
+            self.expect(TokenType.NEWLINE)
+            attr_defs, end_pos = parse_link_attribute_defs(self)
+            node = InferredLinkDef(define_tok.start_pos, end_pos, name, attr_defs, inferred_name)
+
+        # Implicit Links
+        case TokenType.IMPLICIT:
+            self.expect(TokenType.LINK, err_msg="expected 'Link' after link modifier keyword 'Implicit'")
+
+            intermediate_links: list[Name] = [parse_name(self, "expected one or more link names in implicit link definition")]
+
+            while True:
+                tok = self.expect(
+                    TokenType.ARROW_RIGHT, TokenType.ARROW_IMPLICATION,
+                    err_msg="expected '->' or '=>' in implicit link declaration"
+                )
+
+                match tok.typ:
+                    case TokenType.ARROW_RIGHT:
+                        intermediate_links.append(parse_name(self, "expected link name after '->' in implicit link definition"))
+                    case TokenType.ARROW_IMPLICATION:
+                        implied = parse_name(self, "expected implicit link name")
+                        break
+
+            self.expect(TokenType.COLON)
+            self.expect(TokenType.NEWLINE)
+            attr_defs, _ = parse_link_attribute_defs(self)
+            node = ImplicitLinkDef(define_tok.start_pos, implied.end_pos, implied, attr_defs, intermediate_links)
+
+        case _:
+            raise FamParseError(f"unexpected token {kw.string!r}", kw.start_pos, kw.end_pos)
+
+    self.expect(TokenType.NEWLINE)
+    return node
