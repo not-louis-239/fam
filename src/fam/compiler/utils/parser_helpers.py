@@ -239,10 +239,12 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
     kw = self.advance()
 
     match kw.typ:
-        # Node attributes
+        # Parse node attributes
         case TokenType.ATTRIBUTE:
             attr_name = parse_name(self, "expected attribute name")
-            self.expect(TokenType.COLON)
+
+            if self.expect(TokenType.COLON, TokenType.NEWLINE).typ == TokenType.NEWLINE:
+                return AttributeDef(define_tok.start_pos, attr_name.end_pos, typ_expr, attr_name, [])
 
             self.expect(TokenType.NEWLINE)
             self.expect(TokenType.INDENT, err_msg="expected indented block in attribute definition")
@@ -278,10 +280,13 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
         # Links
         case TokenType.LINK:
             name = parse_name(self, "expected link name")
-            self.expect(TokenType.COLON)
-            self.expect(TokenType.NEWLINE)
-            attr_defs, end_pos = parse_link_attribute_defs(self)
-            node = LinkDef(define_tok.start_pos, end_pos, name, attr_defs)
+
+            if self.expect(TokenType.COLON, TokenType.NEWLINE).typ == TokenType.NEWLINE:
+                node = LinkDef(define_tok.start_pos, name.end_pos, name, [])
+            else:
+                self.expect(TokenType.NEWLINE)
+                attr_defs, end_pos = parse_link_attribute_defs(self)
+                node = LinkDef(define_tok.start_pos, end_pos, name, attr_defs)
 
         # Inferred Links
         case TokenType.INFERRED:
@@ -289,10 +294,14 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
             name = parse_name(self, "expected link name")
             self.expect(TokenType.ARROW_DOUBLE, err_msg="expected '<->' after link name in inferred link declaration")
             inferred_name = parse_name(self, "expected inferred link name")
-            self.expect(TokenType.COLON)
-            self.expect(TokenType.NEWLINE)
-            attr_defs, end_pos = parse_link_attribute_defs(self)
-            node = InferredLinkDef(define_tok.start_pos, end_pos, name, attr_defs, inferred_name)
+
+            # Colon is optional if there are no attribute definitions under the link definition
+            if self.expect(TokenType.COLON, TokenType.NEWLINE).typ == TokenType.NEWLINE:
+                node = InferredLinkDef(define_tok.start_pos, inferred_name.end_pos, name, [], inferred_name)
+            else:
+                self.expect(TokenType.NEWLINE)
+                attr_defs, end_pos = parse_link_attribute_defs(self)
+                node = InferredLinkDef(define_tok.start_pos, end_pos, name, attr_defs, inferred_name)
 
         # Implicit Links
         case TokenType.IMPLICIT:
@@ -313,10 +322,14 @@ def parse_define(self: Parser) -> AttributeDef | VariableDef | LinkDef | Inferre
                         implied = parse_name(self, "expected implicit link name")
                         break
 
-            self.expect(TokenType.COLON)
-            self.expect(TokenType.NEWLINE)
-            attr_defs, _ = parse_link_attribute_defs(self)
-            node = ImplicitLinkDef(define_tok.start_pos, implied.end_pos, implied, attr_defs, intermediate_links)
+
+            # Optional colon if there are no further instructions under the implicit link definition
+            if self.expect(TokenType.COLON, TokenType.NEWLINE).typ == TokenType.NEWLINE:
+                node = ImplicitLinkDef(define_tok.start_pos, implied.end_pos, implied, [], intermediate_links)
+            else:
+                self.expect(TokenType.NEWLINE)
+                attr_defs, end_pos = parse_link_attribute_defs(self)
+                node = ImplicitLinkDef(define_tok.start_pos, end_pos, implied, attr_defs, intermediate_links)
 
         case _:
             raise FamParseError(f"unexpected token {kw.string!r}", kw.start_pos, kw.end_pos)

@@ -126,7 +126,10 @@ class Parser:
             elif TokenType.R_SQ_BRAC in acceptable_types:
                 msg = "missing closing ']'"
             elif TokenType.COLON in acceptable_types:
-                msg = "expected ':'"
+                if TokenType.NEWLINE in acceptable_types:
+                    msg = "expected ':' or newline after statement"
+                else:
+                    msg = "expected ':'"
             else:
                 msg = err_msg or "invalid syntax"
 
